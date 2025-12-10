@@ -22,7 +22,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 class MainActivity : AppCompatActivity() {
 
     private lateinit var prefs: SharedPreferences
-    private val NOTIFICATION_PERMISSION_CODE = 101
+    private val notificationPermissionsCode = 101
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    NOTIFICATION_PERMISSION_CODE
+                    notificationPermissionsCode
                 )
             }
         }
@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == NOTIFICATION_PERMISSION_CODE) {
+        if (requestCode == notificationPermissionsCode) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Notifications allowed", Toast.LENGTH_SHORT).show()
             } else {
@@ -120,8 +120,8 @@ class MainActivity : AppCompatActivity() {
     private fun setupFooterDebug() {
         val footerText = findViewById<TextView>(R.id.footerText)
         val debugLayout = findViewById<LinearLayout>(R.id.debugLayout)
-        var tapCount = 0
-        var isDebugUnlocked = false
+        var tapCount: Int = 0
+        var isDebugUnlocked: Boolean = false
 
         footerText.setOnClickListener {
             if (isDebugUnlocked) {
