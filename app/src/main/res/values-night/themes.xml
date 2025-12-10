@@ -1,0 +1,29 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.Hourly" parent="Theme.MaterialComponents.DayNight">
+
+        <item name="colorAccent">@color/dark_brand_primary</item>
+
+        <item name="colorPrimary">@color/dark_brand_primary</item>
+        <item name="colorPrimaryVariant">@color/dark_brand_variant</item>
+        <item name="colorOnPrimary">@color/dark_content_primary</item>
+        <item name="colorSecondary">@color/dark_brand_secondary</item>
+
+        <item name="colorControlActivated">@color/dark_brand_primary</item>
+
+        <item name="android:windowBackground">@color/dark_background_main</item>
+        <item name="android:colorBackground">@color/dark_background_main</item>
+        <item name="android:textColor">@color/dark_content_primary</item>
+        <item name="android:textColorSecondary">@color/dark_content_secondary</item>
+
+        <item name="android:statusBarColor">@color/dark_background_offset</item>
+
+        <item name="elevation">0dp</item>
+        <item name="actionBarStyle">@style/FlatActionBar</item>
+
+    </style>
+
+    <style name="FlatActionBar" parent="Widget.MaterialComponents.ActionBar.Solid">
+        <item name="elevation">0dp</item>
+        <item name="background">@color/dark_background_offset</item>
+    </style>
+</resources>
