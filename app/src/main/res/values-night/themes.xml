@@ -8,6 +8,7 @@
         <item name="colorOnPrimary">@color/dark_content_primary</item>
         <item name="colorSecondary">@color/dark_brand_secondary</item>
 
+        <item name="colorControlNormal">@color/dark_content_primary</item>
         <item name="colorControlActivated">@color/dark_brand_primary</item>
 
         <item name="android:windowBackground">@color/dark_background_main</item>
@@ -20,6 +21,8 @@
         <item name="elevation">0dp</item>
         <item name="actionBarStyle">@style/FlatActionBar</item>
 
+        <item name="titleTextColor">@color/dark_content_primary</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
     <style name="FlatActionBar" parent="Widget.MaterialComponents.ActionBar.Solid">

@@ -205,6 +205,10 @@ class MainActivity : AppCompatActivity() {
             .setTitle("About HRLY")
             .setMessage(aboutMessage)
             .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+            .setNeutralButton("View Source") { _, _ ->
+                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ltrademark/HRLY"))
+                startActivity(browserIntent)
+            }
             .show()
     }
 
