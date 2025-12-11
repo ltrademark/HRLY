@@ -28,6 +28,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        supportActionBar?.title = "HRLY Settings"
+
+
         prefs = getSharedPreferences("hourly_prefs", Context.MODE_PRIVATE)
 
         checkAndRequestPermissions()
@@ -184,7 +187,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showAboutDialog() {
         val aboutMessage = """
-        HRLY is a minimalist hourly chime app.
+        HRLY (Hourly) is a minimalist hourly chime app.
         
         Designed to help you keep track of time 
         without checking your phone constantly.
