@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build APK
+    name: Build & Sign APK
     runs-on: ubuntu-latest
 
     steps:
@@ -27,10 +27,20 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
+      - name: Sign Release APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: app/build/outputs/apk/release/app-release-unsigned.apk
+          files: ${{ steps.sign_app.outputs.signedReleaseFile }} 
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           draft: false
