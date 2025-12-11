@@ -28,23 +28,38 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
-      # 2. Sign the APK (Using r0adkll with explicit Build Tools version)
-      - name: Sign Release APK
-        uses: r0adkll/sign-android-release@v1
-        id: sign_app
-        with:
-          releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-          buildTools: 34.0.0  # <--- THIS IS THE FIX (Forces it to look for the correct version)
+      # 2. Decode your Keystore from the Secret
+      - name: Decode Keystore
+        env:
+          ENCODED_STRING: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$ENCODED_STRING" | base64 --decode > release.jks
 
-      # 3. Upload the SIGNED APK to Releases
+      # 3. Sign the APK manually using apksigner
+      - name: Sign APK
+        run: |
+          # Find the latest Android Build Tools installed on the server
+          BUILD_TOOLS_VERSION=$(ls "$ANDROID_SDK_ROOT/build-tools" | sort -V | tail -n 1)
+          echo "Using Build Tools: $BUILD_TOOLS_VERSION"
+          
+          # Define paths
+          APKSIGNER="$ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS_VERSION/apksigner"
+          INPUT_APK="app/build/outputs/apk/release/app-release-unsigned.apk"
+          OUTPUT_APK="app/build/outputs/apk/release/app-release-signed.apk"
+          
+          # Run the signer
+          "$APKSIGNER" sign --ks release.jks \
+            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
+            --ks-pass "pass:${{ secrets.KEYSTORE_PASSWORD }}" \
+            --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
+            --out "$OUTPUT_APK" \
+            "$INPUT_APK"
+
+      # 4. Upload the SIGNED APK to Releases
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ${{ steps.sign_app.outputs.signedReleaseFile }}
+          files: app/build/outputs/apk/release/app-release-signed.apk
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           draft: false
