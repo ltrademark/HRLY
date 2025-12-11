@@ -121,7 +121,29 @@ class ChimeService : Service() {
     }
 
     private suspend fun playTone(resId: Int, duration: Long) {
-        val mediaPlayer = MediaPlayer.create(this, resId)
+        // 1. Create the player
+        val mediaPlayer = MediaPlayer()
+
+        // 2. Define Audio Attributes (The important part!)
+        val attributes = android.media.AudioAttributes.Builder()
+            .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION) // Or USAGE_ALARM
+            .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+
+        mediaPlayer.setAudioAttributes(attributes)
+
+        // 3. Set Source and Prepare
+        val assetFileDescriptor = resources.openRawResourceFd(resId)
+        mediaPlayer.setDataSource(
+            assetFileDescriptor.fileDescriptor,
+            assetFileDescriptor.startOffset,
+            assetFileDescriptor.length
+        )
+        assetFileDescriptor.close()
+
+        mediaPlayer.prepare()
+
+        // 4. Play
         showVisualPulse(duration)
         mediaPlayer.start()
         delay(duration)

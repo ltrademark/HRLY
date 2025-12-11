@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="./app/src/main/res/drawable/appicon_v2.png" width="200" alt="HRLY App Icon">
+  <img src="./app/src/main/res/drawable/appicon_foreground.png" width="200" alt="HRLY App Icon">
 </p>
 
 <h1 align="center">HRLY</h1>
 
-HRLY is a minimalist hourly chime app designed to help you keep track of time without constantly checking your phone. It uses a simple system of long and short tones to signify the hour, running quietly in the background.
+HRLY (Hourly) is a minimalist hourly chime app designed to help you keep track of time without constantly checking your phone. It uses a simple system of long and short tones to signify the hour, running quietly in the background.
 
 <p align="center">
   <a href="#">

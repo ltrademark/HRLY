@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">HRLY</string>
+    <string name="enable_hourly_chime">Enable Hourly Chime</string>
+    <string name="enable_hourly_chime_description">Play a tone every hour.</string>
+    <string name="enable_passive_aod">Enable Passive AOD</string>
+    <string name="enable_passive_aod_description">Display visual when tone notification runs.</string>
+    <string name="debug_menu">DEBUG MENU</string>
+    <string name="test_8_logic">Test 8:00 Logic</string>
+    <string name="test_12_logic">Test 12:00 Logic</string>
+    <string name="force_chime_now">Force Chime Now</string>
+    <string name="test_visual_pulse">Test Visual Pulse Only</string>
+    <string name="footer_copyright">2025 © Ltrademark. All rights reserved.</string>
 </resources>

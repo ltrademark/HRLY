@@ -2,9 +2,9 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="?android:windowBackground">
 
     <LinearLayout
@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:layout_marginTop="32sp"
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
@@ -30,14 +31,14 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Enable Hourly Chime"
+                    android:text="@string/enable_hourly_chime"
                     android:textSize="18sp"
                     android:textColor="?android:textColor"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Play an tone every hour."
+                    android:text="@string/enable_hourly_chime_description"
                     android:textSize="14sp"
                     android:textColor="?android:textColorSecondary"/>
             </LinearLayout>
@@ -45,7 +46,8 @@
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/switchService"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/enable_hourly_chime" />
         </LinearLayout>
 
         <View
@@ -71,14 +73,14 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Enable Passive AOD"
+                    android:text="@string/enable_passive_aod"
                     android:textSize="18sp"
                     android:textColor="?android:textColor"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Display visual when tone notification runs."
+                    android:text="@string/enable_passive_aod_description"
                     android:textSize="14sp"
                     android:textColor="?android:textColorSecondary"/>
             </LinearLayout>
@@ -86,7 +88,8 @@
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/switchVisual"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/enable_passive_aod" />
         </LinearLayout>
 
     </LinearLayout>
@@ -104,9 +107,9 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="DEBUG MENU"
+            android:text="@string/debug_menu"
             android:textColor="?android:textColor"
-            android:layout_gravity="left"
+            android:layout_gravity="start"
             android:layout_marginBottom="8dp"/>
 
         <Button
@@ -114,27 +117,27 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@android:color/white"
-            android:text="Test 8:00 Logic" />
+            android:text="@string/test_8_logic" />
 
         <Button
             android:id="@+id/btnTest12"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@android:color/white"
-            android:text="Test 12:00 Logic" />
+            android:text="@string/test_12_logic" />
 
         <Button
             android:id="@+id/btnTestNow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@android:color/white"
-            android:text="Force Chime Now" />
+            android:text="@string/force_chime_now" />
 
         <Button
             android:id="@+id/btnTestVisual"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Test Visual Pulse Only"
+            android:text="@string/test_visual_pulse"
             android:textColor="@android:color/white" />
 
     </LinearLayout>
@@ -143,7 +146,7 @@
         android:id="@+id/footerText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="2025 © Ltrademark. All rights reserved."
+        android:text="@string/footer_copyright"
         android:textSize="12sp"
         android:textColor="?android:textColorSecondary"
         android:padding="16dp"
