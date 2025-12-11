@@ -1,7 +1,6 @@
 package com.ltrademark.hourly
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -15,16 +14,19 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import com.google.android.material.switchmaterial.SwitchMaterial
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var prefs: SharedPreferences
     private val notificationPermissionsCode = 101
+    private var isDebugUnlocked = false
 
     // Launchers for File Picker
     private val pickShortTone = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -41,8 +43,7 @@ class MainActivity : AppCompatActivity() {
 
         supportActionBar?.title = "HRLY Settings"
 
-
-        prefs = getSharedPreferences("hourly_prefs", Context.MODE_PRIVATE)
+        prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
 
         checkAndRequestPermissions()
 
@@ -70,7 +71,7 @@ class MainActivity : AppCompatActivity() {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Notifications allowed", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "Permission denied. Service status won't be visible.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Permission denied. Service status won\'t be visible.", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -82,7 +83,9 @@ class MainActivity : AppCompatActivity() {
 
         // Listener
         switchService.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("service_enabled", isChecked).apply()
+            prefs.edit {
+                putBoolean("service_enabled", isChecked)
+            }
 
             // Show/Hide dependent options
             updateVisualContainerState(containerVisual, isChecked)
@@ -124,7 +127,9 @@ class MainActivity : AppCompatActivity() {
         updateVisualContainerState(containerSoundPickers, isCustomEnabled)
 
         switchCustomSounds.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("custom_sounds_enabled", isChecked).apply()
+            prefs.edit {
+                putBoolean("custom_sounds_enabled", isChecked)
+            }
             updateVisualContainerState(containerSoundPickers, isChecked)
         }
 
@@ -143,13 +148,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveCustomTone(uri: Uri, key: String, textView: TextView, clearBtn: View) {
-        // Persist permission to read this file even after restart
         contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
-        prefs.edit().putString(key, uri.toString()).apply()
+        prefs.edit {
+            putString(key, uri.toString())
+        }
 
-        // Update UI
-        val fileName = getFileName(uri) ?: "Custom Audio"
+        val fileName = getFileName(uri) ?: getString(R.string.custom_audio)
         textView.text = fileName
         clearBtn.visibility = View.VISIBLE
     }
@@ -157,42 +162,37 @@ class MainActivity : AppCompatActivity() {
     private fun restoreToneState(key: String, textView: TextView, clearBtn: View) {
         val uriString = prefs.getString(key, null)
         if (uriString != null) {
-            val fileName = getFileName(Uri.parse(uriString)) ?: "Custom Audio"
+            val fileName = getFileName(uriString.toUri()) ?: getString(R.string.custom_audio)
             textView.text = fileName
             clearBtn.visibility = View.VISIBLE
         } else {
-            textView.text = "Default"
+            textView.text = getString(R.string.default_tone)
             clearBtn.visibility = View.GONE
         }
     }
 
     private fun clearCustomTone(key: String, textView: TextView, clearBtn: View) {
-        prefs.edit().remove(key).apply()
-        textView.text = "Default"
+        prefs.edit {
+            remove(key)
+        }
+        textView.text = getString(R.string.default_tone)
         clearBtn.visibility = View.GONE
-        Toast.makeText(this, "Reset to default tone", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.reset_to_default_tone), Toast.LENGTH_SHORT).show()
     }
 
-    // Helper to get friendly name from URI
     private fun getFileName(uri: Uri): String? {
-        var result: String? = null
         if (uri.scheme == "content") {
-            val cursor = contentResolver.query(uri, null, null, null, null)
-            try {
-                if (cursor != null && cursor.moveToFirst()) {
+            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
                     val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                    if (index >= 0) result = cursor.getString(index)
+                    if (index >= 0) return cursor.getString(index)
                 }
-            } finally {
-                cursor?.close()
             }
         }
-        if (result == null) {
-            result = uri.path
-            val cut = result?.lastIndexOf('/')
-            if (cut != null && cut != -1) result = result?.substring(cut + 1)
+        return uri.path?.let { path ->
+            val cut = path.lastIndexOf('/')
+            if (cut != -1) path.substring(cut + 1) else path
         }
-        return result
     }
 
     private fun setupVisualToggle() {
@@ -201,7 +201,7 @@ class MainActivity : AppCompatActivity() {
         if (!Settings.canDrawOverlays(this)) {
             switchVisual.isChecked = false
             switchVisual.setOnClickListener {
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri())
                 startActivity(intent)
                 Toast.makeText(this, "Please allow 'Display over other apps' first", Toast.LENGTH_LONG).show()
                 switchVisual.isChecked = false
@@ -210,7 +210,9 @@ class MainActivity : AppCompatActivity() {
             switchVisual.isChecked = prefs.getBoolean("visual_enabled", false)
             switchVisual.setOnClickListener(null) // Clear the previous listener
             switchVisual.setOnCheckedChangeListener { _, isChecked ->
-                prefs.edit().putBoolean("visual_enabled", isChecked).apply()
+                prefs.edit {
+                    putBoolean("visual_enabled", isChecked)
+                }
                 val status = if (isChecked) "Enabled" else "Disabled"
                 Toast.makeText(this, "Visual Pulse $status", Toast.LENGTH_SHORT).show()
             }
@@ -220,8 +222,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupFooterDebug() {
         val footerText = findViewById<TextView>(R.id.footerText)
         val debugLayout = findViewById<LinearLayout>(R.id.debugLayout)
-        var tapCount: Int = 0
-        var isDebugUnlocked: Boolean = false
+        var tapCount = 0
 
         footerText.setOnClickListener {
             if (isDebugUnlocked) {
@@ -306,7 +307,7 @@ class MainActivity : AppCompatActivity() {
             .setMessage(aboutMessage)
             .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
             .setNeutralButton("View Source") { _, _ ->
-                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ltrademark/HRLY"))
+                val browserIntent = Intent(Intent.ACTION_VIEW, "https://github.com/ltrademark/HRLY".toUri())
                 startActivity(browserIntent)
             }
             .show()

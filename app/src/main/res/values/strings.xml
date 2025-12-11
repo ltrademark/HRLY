@@ -20,4 +20,7 @@
     <string name="default_tone">Default</string>
     <string name="choose_sound">Choose</string>
     <string name="clear_sound_selection">Clear sound selection</string>
+    <string name="custom_audio">Custom Audio</string>
+    <string name="reset_to_default_tone">Reset to default tone</string>
+
 </resources>

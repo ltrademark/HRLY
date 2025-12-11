@@ -1,12 +1,10 @@
 package com.ltrademark.hourly
 
 import android.app.*
-import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -17,6 +15,8 @@ import android.view.WindowManager
 import android.widget.ImageView
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import kotlinx.coroutines.*
 import java.util.*
 
@@ -25,7 +25,6 @@ class ChimeService : Service() {
     companion object {
         const val ACTION_PLAY_CHIME = "com.ltrademark.hourly.ACTION_PLAY_CHIME"
         const val ACTION_TEST_VISUAL = "com.ltrademark.hourly.ACTION_TEST_VISUAL"
-
         const val ACTION_SKIP_NEXT = "com.ltrademark.hourly.ACTION_SKIP_NEXT"
         const val ACTION_STOP_SERVICE = "com.ltrademark.hourly.ACTION_STOP_SERVICE"
 
@@ -44,7 +43,6 @@ class ChimeService : Service() {
 
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Ensure notification is always present/updated
         startForeground(1, createNotification())
 
         when (intent?.action) {
@@ -62,11 +60,9 @@ class ChimeService : Service() {
                     showVisualPulse(3000L, forceShow = true)
                 }
             }
-            // NEW: Skip the next upcoming chime
             ACTION_SKIP_NEXT -> {
                 skipNextChime()
             }
-            // NEW: Turn everything off
             ACTION_STOP_SERVICE -> {
                 stopChimeService()
             }
@@ -81,7 +77,7 @@ class ChimeService : Service() {
     @RequiresApi(Build.VERSION_CODES.S)
     private suspend fun playTone(defaultResId: Int, duration: Long, type: String) {
         val mediaPlayer = MediaPlayer()
-        val prefs = getSharedPreferences("hourly_prefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
 
         val isCustomEnabled = prefs.getBoolean("custom_sounds_enabled", false)
 
@@ -96,7 +92,7 @@ class ChimeService : Service() {
 
         try {
             if (customUriString != null) {
-                mediaPlayer.setDataSource(this, Uri.parse(customUriString))
+                mediaPlayer.setDataSource(this, customUriString.toUri())
             } else {
                 val afd = resources.openRawResourceFd(defaultResId)
                 mediaPlayer.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
@@ -117,7 +113,6 @@ class ChimeService : Service() {
 
         } catch (e: Exception) {
             e.printStackTrace()
-            // Fallback
             if (customUriString != null) {
                 mediaPlayer.release()
                 playTone(defaultResId, duration, "fallback")
@@ -156,19 +151,16 @@ class ChimeService : Service() {
         }
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
 
-        // 1. Create the SKIP Button Logic
         val skipIntent = Intent(this, ChimeService::class.java).apply { action = ACTION_SKIP_NEXT }
         val skipPendingIntent = PendingIntent.getService(
             this, 1, skipIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // 2. Create the DISABLE Button Logic
         val stopIntent = Intent(this, ChimeService::class.java).apply { action = ACTION_STOP_SERVICE }
         val stopPendingIntent = PendingIntent.getService(
             this, 2, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // 3. Create the "Open App" Logic (tapping the notification body)
         val mainIntent = Intent(this, MainActivity::class.java)
         val mainPendingIntent = PendingIntent.getActivity(
             this, 0, mainIntent, PendingIntent.FLAG_IMMUTABLE
@@ -180,6 +172,7 @@ class ChimeService : Service() {
             .setSmallIcon(R.drawable.ic_stat_chime)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setCategory(Notification.CATEGORY_SERVICE)
+            .setContentIntent(mainPendingIntent)
             .addAction(android.R.drawable.ic_media_next, "Skip Next", skipPendingIntent)
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Disable Hourly Chime", stopPendingIntent)
             .setOngoing(true)
@@ -187,11 +180,11 @@ class ChimeService : Service() {
     }
 
     private fun stopChimeService() {
-        // 1. Update Preference so the UI knows it's off
-        val prefs = getSharedPreferences("hourly_prefs", Context.MODE_PRIVATE)
-        prefs.edit().putBoolean("service_enabled", false).apply()
+        val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+        prefs.edit {
+            putBoolean("service_enabled", false)
+        }
 
-        // 2. Cancel Alarm
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, ChimeReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
@@ -199,7 +192,6 @@ class ChimeService : Service() {
         )
         alarmManager.cancel(pendingIntent)
 
-        // 3. Stop Service
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -212,9 +204,8 @@ class ChimeService : Service() {
             this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Schedule for 2 hours from now instead of 1
         val calendar = Calendar.getInstance().apply {
-            add(Calendar.HOUR_OF_DAY, 2) // Skip 1, go to 2
+            add(Calendar.HOUR_OF_DAY, 2)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
@@ -228,11 +219,10 @@ class ChimeService : Service() {
             )
         }
 
-        // Update notification to show the NEW time
         val channelId = "chime_channel"
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("HRLY Active")
-            .setContentText("Next chime at ${getNextChimeTime(2)}") // Show +2 hours time
+            .setContentText("Next chime at ${getNextChimeTime(2)}")
             .setSmallIcon(R.drawable.ic_stat_chime)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .addAction(android.R.drawable.ic_media_next, "Skip Next",
@@ -264,14 +254,13 @@ class ChimeService : Service() {
     }
 
     private fun showVisualPulse(duration: Long, forceShow: Boolean = false) {
-        val prefs = getSharedPreferences("hourly_prefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
         if (!prefs.getBoolean("visual_enabled", false)) return
 
         if (!Settings.canDrawOverlays(this)) return
 
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         val isScreenOn = powerManager.isInteractive
-        // Only show visuals on the lock screen, unless forced for testing.
         if (isScreenOn && !forceShow) {
             return
         }
@@ -282,9 +271,8 @@ class ChimeService : Service() {
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                     WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, // Lets clicks pass through
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
             PixelFormat.TRANSLUCENT
         ).apply { gravity = Gravity.CENTER }
 
@@ -294,7 +282,6 @@ class ChimeService : Service() {
 
         windowManager.addView(imageView, params)
 
-        // Animate and remove the view
         imageView.animate()
             .alpha(1f)
             .scaleX(1.2f).scaleY(1.2f)
@@ -304,12 +291,12 @@ class ChimeService : Service() {
                     .alpha(0f)
                     .scaleX(1.0f).scaleY(1.0f)
                     .setDuration(duration / 2)
-                    .setStartDelay(duration / 4) // Hold for a bit
+                    .setStartDelay(duration / 4)
                     .withEndAction {
                         try {
-                            windowManager.removeView(imageView) // Clean up to prevent leaks
+                            windowManager.removeView(imageView)
                         } catch (e: Exception) {
-                            e.printStackTrace() // View might already be gone
+                            e.printStackTrace()
                         }
                     }
                     .start()
