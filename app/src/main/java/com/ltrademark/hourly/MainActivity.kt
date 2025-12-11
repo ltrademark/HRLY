@@ -314,6 +314,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+
+        val isServiceEnabled = prefs.getBoolean("service_enabled", false)
+        val switchService = findViewById<SwitchMaterial>(R.id.switchService)
+        val containerVisual = findViewById<LinearLayout>(R.id.containerVisual)
+        val containerCustomSoundsToggle = findViewById<LinearLayout>(R.id.containerCustomSoundsToggle)
+
+        if (switchService.isChecked != isServiceEnabled) {
+            switchService.isChecked = isServiceEnabled
+            updateVisualContainerState(containerVisual, isServiceEnabled)
+            updateVisualContainerState(containerCustomSoundsToggle, isServiceEnabled)
+        }
+
         if (Settings.canDrawOverlays(this)) {
             setupVisualToggle()
         }

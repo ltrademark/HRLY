@@ -4,8 +4,8 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
-import android.media.MediaPlayer
 import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
@@ -24,8 +24,12 @@ class ChimeService : Service() {
 
     companion object {
         const val ACTION_PLAY_CHIME = "com.ltrademark.hourly.ACTION_PLAY_CHIME"
-        const val EXTRA_TEST_HOUR = "com.ltrademark.hourly.EXTRA_TEST_HOUR"
         const val ACTION_TEST_VISUAL = "com.ltrademark.hourly.ACTION_TEST_VISUAL"
+
+        const val ACTION_SKIP_NEXT = "com.ltrademark.hourly.ACTION_SKIP_NEXT"
+        const val ACTION_STOP_SERVICE = "com.ltrademark.hourly.ACTION_STOP_SERVICE"
+
+        const val EXTRA_TEST_HOUR = "com.ltrademark.hourly.EXTRA_TEST_HOUR"
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
@@ -37,6 +41,42 @@ class ChimeService : Service() {
     private val shortToneDuration = 500L
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Ensure notification is always present/updated
+        startForeground(1, createNotification())
+
+        when (intent?.action) {
+            ACTION_PLAY_CHIME -> {
+                val testHour = intent.getIntExtra(EXTRA_TEST_HOUR, -1)
+                val hourToPlay = if (testHour != -1) testHour else Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                playSequenceForHour(hourToPlay)
+
+                if (testHour == -1) {
+                    scheduleNextChime()
+                }
+            }
+            ACTION_TEST_VISUAL -> {
+                serviceScope.launch(Dispatchers.Main) {
+                    showVisualPulse(3000L, forceShow = true)
+                }
+            }
+            // NEW: Skip the next upcoming chime
+            ACTION_SKIP_NEXT -> {
+                skipNextChime()
+            }
+            // NEW: Turn everything off
+            ACTION_STOP_SERVICE -> {
+                stopChimeService()
+            }
+            else -> {
+                scheduleNextChime()
+            }
+        }
+
+        return START_STICKY
+    }
 
     @RequiresApi(Build.VERSION_CODES.S)
     private suspend fun playTone(defaultResId: Int, duration: Long, type: String) {
@@ -95,9 +135,9 @@ class ChimeService : Service() {
         scheduleNextChime()
     }
 
-    private fun getNextChimeTime(): String {
+    private fun getNextChimeTime(hourOffset: Int = 1): String {
         val calendar = Calendar.getInstance()
-        calendar.add(Calendar.HOUR_OF_DAY, 1)
+        calendar.add(Calendar.HOUR_OF_DAY, hourOffset)
         calendar.set(Calendar.MINUTE, 0)
 
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
@@ -116,34 +156,113 @@ class ChimeService : Service() {
         }
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
 
+        // 1. Create the SKIP Button Logic
+        val skipIntent = Intent(this, ChimeService::class.java).apply { action = ACTION_SKIP_NEXT }
+        val skipPendingIntent = PendingIntent.getService(
+            this, 1, skipIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // 2. Create the DISABLE Button Logic
+        val stopIntent = Intent(this, ChimeService::class.java).apply { action = ACTION_STOP_SERVICE }
+        val stopPendingIntent = PendingIntent.getService(
+            this, 2, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // 3. Create the "Open App" Logic (tapping the notification body)
+        val mainIntent = Intent(this, MainActivity::class.java)
+        val mainPendingIntent = PendingIntent.getActivity(
+            this, 0, mainIntent, PendingIntent.FLAG_IMMUTABLE
+        )
+
         return NotificationCompat.Builder(this, channelId)
             .setContentTitle("HRLY Active")
             .setContentText("Next chime at ${getNextChimeTime()}")
             .setSmallIcon(R.drawable.ic_stat_chime)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setCategory(Notification.CATEGORY_SERVICE)
+            .addAction(android.R.drawable.ic_media_next, "Skip Next", skipPendingIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Disable Hourly Chime", stopPendingIntent)
+            .setOngoing(true)
             .build()
+    }
+
+    private fun stopChimeService() {
+        // 1. Update Preference so the UI knows it's off
+        val prefs = getSharedPreferences("hourly_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("service_enabled", false).apply()
+
+        // 2. Cancel Alarm
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, ChimeReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(pendingIntent)
+
+        // 3. Stop Service
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun skipNextChime() {
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, ChimeReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Schedule for 2 hours from now instead of 1
+        val calendar = Calendar.getInstance().apply {
+            add(Calendar.HOUR_OF_DAY, 2) // Skip 1, go to 2
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        if (alarmManager.canScheduleExactAlarms()) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
+        }
+
+        // Update notification to show the NEW time
+        val channelId = "chime_channel"
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("HRLY Active")
+            .setContentText("Next chime at ${getNextChimeTime(2)}") // Show +2 hours time
+            .setSmallIcon(R.drawable.ic_stat_chime)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .addAction(android.R.drawable.ic_media_next, "Skip Next",
+                PendingIntent.getService(this, 1, Intent(this, ChimeService::class.java).apply { action = ACTION_SKIP_NEXT }, PendingIntent.FLAG_IMMUTABLE))
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Disable",
+                PendingIntent.getService(this, 2, Intent(this, ChimeService::class.java).apply { action = ACTION_STOP_SERVICE }, PendingIntent.FLAG_IMMUTABLE))
+            .build()
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(1, notification)
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
     private fun playSequenceForHour(hour24: Int) {
         serviceScope.launch {
-            // (hour + 24) % 12 === 0 ? 12 : (hour + 24) % 12
             val hour12 = if (hour24 % 12 == 0) 12 else hour24 % 12
-
             val longTones = hour12 / 5
             val shortTones = hour12 % 5
 
             repeat(longTones) {
-                playTone(R.raw.tone_long, longToneDuration, "long") // Pass "long"
+                playTone(R.raw.tone_long, longToneDuration, "long")
                 delay(15)
             }
             repeat(shortTones) {
-                playTone(R.raw.tone_short, shortToneDuration, "short") // Pass "short"
+                playTone(R.raw.tone_short, shortToneDuration, "short")
                 delay(15)
             }
         }
     }
+
     private fun showVisualPulse(duration: Long, forceShow: Boolean = false) {
         val prefs = getSharedPreferences("hourly_prefs", Context.MODE_PRIVATE)
         if (!prefs.getBoolean("visual_enabled", false)) return
