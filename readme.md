@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./app/src/main/res/drawable/appicon_foreground.png" width="200" alt="HRLY App Icon">
+  <img src="./app/src/main/res/drawable/appicon_round.png" width="200" alt="HRLY App Icon">
 </p>
 
 <h1 align="center">HRLY</h1>
