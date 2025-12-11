@@ -11,18 +11,29 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.material.switchmaterial.SwitchMaterial
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var prefs: SharedPreferences
     private val notificationPermissionsCode = 101
+
+    // Launchers for File Picker
+    private val pickShortTone = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { saveCustomTone(it, "custom_tone_short", findViewById(R.id.txtShortToneName), findViewById(R.id.btnClearShort)) }
+    }
+
+    private val pickLongTone = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { saveCustomTone(it, "custom_tone_long", findViewById(R.id.txtLongToneName), findViewById(R.id.btnClearLong)) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +49,7 @@ class MainActivity : AppCompatActivity() {
         setupServiceToggle()
         setupVisualToggle()
         setupFooterDebug()
+        setupCustomSounds()
     }
 
     private fun checkAndRequestPermissions() {
@@ -66,26 +78,31 @@ class MainActivity : AppCompatActivity() {
     private fun setupServiceToggle() {
         val switchService = findViewById<SwitchMaterial>(R.id.switchService)
         val containerVisual = findViewById<LinearLayout>(R.id.containerVisual)
+        val containerCustomSoundsToggle = findViewById<LinearLayout>(R.id.containerCustomSoundsToggle)
 
+        // Listener
         switchService.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("service_enabled", isChecked).apply()
+
+            // Show/Hide dependent options
             updateVisualContainerState(containerVisual, isChecked)
+            updateVisualContainerState(containerCustomSoundsToggle, isChecked)
 
             if (isChecked) {
                 val intent = Intent(this, ChimeService::class.java)
                 startForegroundService(intent)
-                if (switchService.isPressed) {
-                    Toast.makeText(this, "Hourly Chime Enabled", Toast.LENGTH_SHORT).show()
-                }
+                if (switchService.isPressed) Toast.makeText(this, "Hourly Chime Enabled", Toast.LENGTH_SHORT).show()
             } else {
                 val intent = Intent(this, ChimeService::class.java)
                 stopService(intent)
             }
         }
 
+        // Initial State
         val isServiceEnabled = prefs.getBoolean("service_enabled", false)
         switchService.isChecked = isServiceEnabled
         updateVisualContainerState(containerVisual, isServiceEnabled)
+        updateVisualContainerState(containerCustomSoundsToggle, isServiceEnabled)
     }
 
     private fun updateVisualContainerState(container: View, isEnabled: Boolean) {
@@ -96,6 +113,86 @@ class MainActivity : AppCompatActivity() {
         } else {
             container.visibility = View.GONE
         }
+    }
+
+    private fun setupCustomSounds() {
+        val switchCustomSounds = findViewById<SwitchMaterial>(R.id.switchCustomSounds)
+        val containerSoundPickers = findViewById<LinearLayout>(R.id.containerSoundPickers)
+
+        val isCustomEnabled = prefs.getBoolean("custom_sounds_enabled", false)
+        switchCustomSounds.isChecked = isCustomEnabled
+        updateVisualContainerState(containerSoundPickers, isCustomEnabled)
+
+        switchCustomSounds.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("custom_sounds_enabled", isChecked).apply()
+            updateVisualContainerState(containerSoundPickers, isChecked)
+        }
+
+        restoreToneState("custom_tone_short", findViewById(R.id.txtShortToneName), findViewById(R.id.btnClearShort))
+        restoreToneState("custom_tone_long", findViewById(R.id.txtLongToneName), findViewById(R.id.btnClearLong))
+
+        findViewById<Button>(R.id.btnPickShort).setOnClickListener { pickShortTone.launch("audio/*") }
+        findViewById<Button>(R.id.btnPickLong).setOnClickListener { pickLongTone.launch("audio/*") }
+
+        findViewById<ImageView>(R.id.btnClearShort).setOnClickListener {
+            clearCustomTone("custom_tone_short", findViewById(R.id.txtShortToneName), it)
+        }
+        findViewById<ImageView>(R.id.btnClearLong).setOnClickListener {
+            clearCustomTone("custom_tone_long", findViewById(R.id.txtLongToneName), it)
+        }
+    }
+
+    private fun saveCustomTone(uri: Uri, key: String, textView: TextView, clearBtn: View) {
+        // Persist permission to read this file even after restart
+        contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        prefs.edit().putString(key, uri.toString()).apply()
+
+        // Update UI
+        val fileName = getFileName(uri) ?: "Custom Audio"
+        textView.text = fileName
+        clearBtn.visibility = View.VISIBLE
+    }
+
+    private fun restoreToneState(key: String, textView: TextView, clearBtn: View) {
+        val uriString = prefs.getString(key, null)
+        if (uriString != null) {
+            val fileName = getFileName(Uri.parse(uriString)) ?: "Custom Audio"
+            textView.text = fileName
+            clearBtn.visibility = View.VISIBLE
+        } else {
+            textView.text = "Default"
+            clearBtn.visibility = View.GONE
+        }
+    }
+
+    private fun clearCustomTone(key: String, textView: TextView, clearBtn: View) {
+        prefs.edit().remove(key).apply()
+        textView.text = "Default"
+        clearBtn.visibility = View.GONE
+        Toast.makeText(this, "Reset to default tone", Toast.LENGTH_SHORT).show()
+    }
+
+    // Helper to get friendly name from URI
+    private fun getFileName(uri: Uri): String? {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            val cursor = contentResolver.query(uri, null, null, null, null)
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (index >= 0) result = cursor.getString(index)
+                }
+            } finally {
+                cursor?.close()
+            }
+        }
+        if (result == null) {
+            result = uri.path
+            val cut = result?.lastIndexOf('/')
+            if (cut != null && cut != -1) result = result?.substring(cut + 1)
+        }
+        return result
     }
 
     private fun setupVisualToggle() {

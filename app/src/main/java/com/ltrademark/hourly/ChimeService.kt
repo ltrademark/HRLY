@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.media.MediaPlayer
+import android.media.AudioAttributes
+import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -37,30 +39,52 @@ class ChimeService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     @RequiresApi(Build.VERSION_CODES.S)
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(1, createNotification())
+    private suspend fun playTone(defaultResId: Int, duration: Long, type: String) {
+        val mediaPlayer = MediaPlayer()
+        val prefs = getSharedPreferences("hourly_prefs", Context.MODE_PRIVATE)
 
-        when (intent?.action) {
-            ACTION_PLAY_CHIME -> {
-                val testHour = intent.getIntExtra(EXTRA_TEST_HOUR, -1)
-                val hourToPlay = if (testHour != -1) testHour else Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-                playSequenceForHour(hourToPlay)
+        val isCustomEnabled = prefs.getBoolean("custom_sounds_enabled", false)
 
-                if (testHour == -1) {
-                    scheduleNextChime()
-                }
-            }
-            ACTION_TEST_VISUAL -> {
-                serviceScope.launch(Dispatchers.Main) {
-                    showVisualPulse(3000L, forceShow = true)
-                }
-            }
-            else -> {
-                scheduleNextChime()
-            }
+        val customKey = when {
+            !isCustomEnabled -> null
+            type == "short" -> "custom_tone_short"
+            type == "long" -> "custom_tone_long"
+            else -> null
         }
 
-        return START_STICKY
+        val customUriString = if (customKey != null) prefs.getString(customKey, null) else null
+
+        try {
+            if (customUriString != null) {
+                mediaPlayer.setDataSource(this, Uri.parse(customUriString))
+            } else {
+                val afd = resources.openRawResourceFd(defaultResId)
+                mediaPlayer.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                afd.close()
+            }
+
+            val attributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+            mediaPlayer.setAudioAttributes(attributes)
+
+            mediaPlayer.prepare()
+            showVisualPulse(duration)
+            mediaPlayer.start()
+            delay(duration)
+            mediaPlayer.release()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Fallback
+            if (customUriString != null) {
+                mediaPlayer.release()
+                playTone(defaultResId, duration, "fallback")
+            } else {
+                mediaPlayer.release()
+            }
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -101,6 +125,7 @@ class ChimeService : Service() {
             .build()
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun playSequenceForHour(hour24: Int) {
         serviceScope.launch {
             // (hour + 24) % 12 === 0 ? 12 : (hour + 24) % 12
@@ -110,46 +135,15 @@ class ChimeService : Service() {
             val shortTones = hour12 % 5
 
             repeat(longTones) {
-                playTone(R.raw.tone_long, longToneDuration)
-                delay(15) // Gap between tones
+                playTone(R.raw.tone_long, longToneDuration, "long") // Pass "long"
+                delay(15)
             }
             repeat(shortTones) {
-                playTone(R.raw.tone_short, shortToneDuration)
-                delay(15) // Gap between tones
+                playTone(R.raw.tone_short, shortToneDuration, "short") // Pass "short"
+                delay(15)
             }
         }
     }
-
-    private suspend fun playTone(resId: Int, duration: Long) {
-        // 1. Create the player
-        val mediaPlayer = MediaPlayer()
-
-        // 2. Define Audio Attributes (The important part!)
-        val attributes = android.media.AudioAttributes.Builder()
-            .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION) // Or USAGE_ALARM
-            .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
-
-        mediaPlayer.setAudioAttributes(attributes)
-
-        // 3. Set Source and Prepare
-        val assetFileDescriptor = resources.openRawResourceFd(resId)
-        mediaPlayer.setDataSource(
-            assetFileDescriptor.fileDescriptor,
-            assetFileDescriptor.startOffset,
-            assetFileDescriptor.length
-        )
-        assetFileDescriptor.close()
-
-        mediaPlayer.prepare()
-
-        // 4. Play
-        showVisualPulse(duration)
-        mediaPlayer.start()
-        delay(duration)
-        mediaPlayer.release()
-    }
-
     private fun showVisualPulse(duration: Long, forceShow: Boolean = false) {
         val prefs = getSharedPreferences("hourly_prefs", Context.MODE_PRIVATE)
         if (!prefs.getBoolean("visual_enabled", false)) return
