@@ -325,6 +325,15 @@ class ChimeService : Service() {
                 calendar.timeInMillis,
                 pendingIntent
             )
+        } else {
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            val errorNotification = NotificationCompat.Builder(this, "chime_channel")
+                .setContentTitle("HRLY Error")
+                .setContentText("Permission missing! Cannot schedule alarms.")
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .build()
+            notificationManager.notify(999, errorNotification)
         }
     }
 

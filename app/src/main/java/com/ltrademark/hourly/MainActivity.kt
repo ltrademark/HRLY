@@ -1,6 +1,7 @@
 package com.ltrademark.hourly
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -9,6 +10,9 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
+import android.app.AlarmManager
+import android.content.Context
+import android.os.PowerManager
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -46,6 +50,7 @@ class MainActivity : AppCompatActivity() {
         prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
 
         checkAndRequestPermissions()
+        requestBatteryUnrestricted()
 
         setupServiceToggle()
         setupVisualToggle()
@@ -62,6 +67,30 @@ class MainActivity : AppCompatActivity() {
                     notificationPermissionsCode
                 )
             }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(AlarmManager::class.java)
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intent = Intent(
+                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                    "package:$packageName".toUri()
+                )
+                startActivity(intent)
+                Toast.makeText(this, "Please allow 'Alarms & Reminders' for HRLY", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    @SuppressLint("BatteryLife")
+    private fun requestBatteryUnrestricted() {
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+            val intent = Intent(
+                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                "package:$packageName".toUri()
+            )
+            startActivity(intent)
         }
     }
 
