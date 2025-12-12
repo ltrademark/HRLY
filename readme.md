@@ -8,7 +8,7 @@ HRLY (Hourly) is a minimalist hourly chime app designed to help you keep track o
 
 <p align="center">
   <a href="#">
-    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" width="200" alt="Get it on Google Play">
+    <img src="https://f-droid.org/badge/get-it-on.svg" width="150" alt="Get it on F-Droid">
   </a>
 </p>
 
