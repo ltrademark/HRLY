@@ -256,45 +256,110 @@ class ChimeService : Service() {
     private fun showVisualPulse(duration: Long, forceShow: Boolean = false) {
         val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
         if (!prefs.getBoolean("visual_enabled", false)) return
-
         if (!Settings.canDrawOverlays(this)) return
 
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         val isScreenOn = powerManager.isInteractive
-        if (isScreenOn && !forceShow) {
-            return
-        }
+
+        if (isScreenOn && !forceShow) return
 
         val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+
+        // 1. Calculate REAL Screen Size (Modern vs Legacy)
+        val screenWidth: Int
+        val screenHeight: Int
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // New Way (Android 11+)
+            val metrics = windowManager.currentWindowMetrics
+            val bounds = metrics.bounds
+            screenWidth = bounds.width()
+            screenHeight = bounds.height()
+        } else {
+            // Old Way (Android 10 and below)
+            val displayMetrics = android.util.DisplayMetrics()
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+            screenWidth = displayMetrics.widthPixels
+            screenHeight = displayMetrics.heightPixels
+        }
+
+        // 2. Window Params
+        @Suppress("DEPRECATION")
+        val layoutFlag = (
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                )
+
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT,
+            screenWidth,
+            screenHeight + 200, // Extra height buffer for nav bars
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            layoutFlag,
             PixelFormat.TRANSLUCENT
-        ).apply { gravity = Gravity.CENTER }
+        )
+
+        // 3. Container with Immersive Flags
+        val container = android.widget.FrameLayout(this)
+        container.setBackgroundColor(android.graphics.Color.BLACK)
+        container.alpha = 0f
+
+        // Hide System Bars (Status/Nav)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            container.windowInsetsController?.hide(android.view.WindowInsets.Type.systemBars())
+        } else {
+            @Suppress("DEPRECATION")
+            container.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_LOW_PROFILE or
+                            View.SYSTEM_UI_FLAG_FULLSCREEN or
+                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    )
+        }
+
+        // 4. Image Setup
+        val sizeInDp = 85
+        val scale = resources.displayMetrics.density
+        val sizeInPx = (sizeInDp * scale + 0.5f).toInt()
 
         val imageView = ImageView(this)
         imageView.setImageResource(R.drawable.sphere_glow)
-        imageView.alpha = 0f
+        val imageParams = android.widget.FrameLayout.LayoutParams(sizeInPx, sizeInPx).apply {
+            gravity = Gravity.CENTER
+        }
+        container.addView(imageView, imageParams)
 
-        windowManager.addView(imageView, params)
+        // 5. Add to Window
+        try {
+            windowManager.addView(container, params)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return
+        }
 
-        imageView.animate()
+        // 6. Animation
+        val fadeInTime = 500L
+        val holdTime = duration - (fadeInTime * 2)
+
+        container.animate()
             .alpha(1f)
-            .scaleX(1.2f).scaleY(1.2f)
-            .setDuration(duration / 4)
+            .setDuration(fadeInTime)
             .withEndAction {
-                imageView.animate()
+                imageView.animate().scaleX(1.1f).scaleY(1.1f).setDuration(holdTime).start()
+
+                container.animate()
                     .alpha(0f)
-                    .scaleX(1.0f).scaleY(1.0f)
-                    .setDuration(duration / 2)
-                    .setStartDelay(duration / 4)
+                    .setDuration(fadeInTime)
+                    .setStartDelay(holdTime)
                     .withEndAction {
                         try {
-                            windowManager.removeView(imageView)
+                            windowManager.removeView(container)
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }

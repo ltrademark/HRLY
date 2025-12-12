@@ -31,7 +31,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var prefs: SharedPreferences
     private val notificationPermissionsCode = 101
-    private var isDebugUnlocked = false
 
     // Launchers for Native system sounds
     private val pickShortTone = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -313,10 +312,15 @@ class MainActivity : AppCompatActivity() {
         val footerText = findViewById<TextView>(R.id.footerText)
         val debugLayout = findViewById<LinearLayout>(R.id.debugLayout)
         var tapCount = 0
+        var isDebugUnlocked = false
+        var currentToast: Toast? = null
 
         footerText.setOnClickListener {
+            currentToast?.cancel()
+
             if (isDebugUnlocked) {
-                Toast.makeText(this, "Debug mode is already active", Toast.LENGTH_SHORT).show()
+                currentToast = Toast.makeText(this, "Debug mode is already active", Toast.LENGTH_SHORT)
+                currentToast?.show()
                 return@setOnClickListener
             }
 
@@ -325,11 +329,14 @@ class MainActivity : AppCompatActivity() {
             if (tapCount >= 5) {
                 isDebugUnlocked = true
                 debugLayout.visibility = View.VISIBLE
-                Toast.makeText(this, "Debug Mode Unlocked!", Toast.LENGTH_SHORT).show()
+
+                currentToast = Toast.makeText(this, "Debug Mode Unlocked!", Toast.LENGTH_SHORT)
+                currentToast?.show()
 
             } else if (tapCount > 2) {
                 val tapsRemaining = 5 - tapCount
-                Toast.makeText(this, "You are $tapsRemaining steps away from being a developer", Toast.LENGTH_SHORT).show()
+                currentToast = Toast.makeText(this, "You are $tapsRemaining steps away from being a developer", Toast.LENGTH_SHORT)
+                currentToast?.show()
             }
         }
 
@@ -353,6 +360,17 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnTestNow).setOnClickListener {
             val intent = Intent(this, ChimeService::class.java).apply {
                 action = ChimeService.ACTION_PLAY_CHIME
+            }
+            startForegroundService(intent)
+        }
+
+        findViewById<Button>(R.id.btnTestVisual).setOnClickListener {
+            if (!Settings.canDrawOverlays(this)) {
+                Toast.makeText(this, "Enable 'Passive AOD' first (Permission needed)", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val intent = Intent(this, ChimeService::class.java).apply {
+                action = ChimeService.ACTION_TEST_VISUAL
             }
             startForegroundService(intent)
         }
