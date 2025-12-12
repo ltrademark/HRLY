@@ -10,6 +10,9 @@
 .DS_Store
 /build
 /captures
+/app/release/baselineProfiles
+/app/release/app-release.apk
+/app/release/output-metadata.json
 .externalNativeBuild
 .cxx
 local.properties

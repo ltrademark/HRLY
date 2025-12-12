@@ -2,17 +2,18 @@ package com.ltrademark.hourly
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlarmManager
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.OpenableColumns
 import android.provider.Settings
 import android.view.View
-import android.app.AlarmManager
-import android.content.Context
-import android.os.PowerManager
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -32,13 +33,37 @@ class MainActivity : AppCompatActivity() {
     private val notificationPermissionsCode = 101
     private var isDebugUnlocked = false
 
-    // Launchers for File Picker
-    private val pickShortTone = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { saveCustomTone(it, "custom_tone_short", findViewById(R.id.txtShortToneName), findViewById(R.id.btnClearShort)) }
+    // Launchers for Native system sounds
+    private val pickShortTone = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val intent = result.data
+            val uri: Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            }
+
+            if (uri != null) {
+                saveCustomTone(uri, "custom_tone_short", findViewById(R.id.txtShortToneName), findViewById(R.id.btnClearShort))
+            }
+        }
     }
 
-    private val pickLongTone = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { saveCustomTone(it, "custom_tone_long", findViewById(R.id.txtLongToneName), findViewById(R.id.btnClearLong)) }
+    private val pickLongTone = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val intent = result.data
+            val uri: Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            }
+
+            if (uri != null) {
+                saveCustomTone(uri, "custom_tone_long", findViewById(R.id.txtLongToneName), findViewById(R.id.btnClearLong))
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,7 +109,7 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("BatteryLife")
     private fun requestBatteryUnrestricted() {
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
             val intent = Intent(
                 Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
@@ -165,8 +190,38 @@ class MainActivity : AppCompatActivity() {
         restoreToneState("custom_tone_short", findViewById(R.id.txtShortToneName), findViewById(R.id.btnClearShort))
         restoreToneState("custom_tone_long", findViewById(R.id.txtLongToneName), findViewById(R.id.btnClearLong))
 
-        findViewById<Button>(R.id.btnPickShort).setOnClickListener { pickShortTone.launch("audio/*") }
-        findViewById<Button>(R.id.btnPickLong).setOnClickListener { pickLongTone.launch("audio/*") }
+        findViewById<Button>(R.id.btnPickShort).setOnClickListener {
+            val currentUriString = prefs.getString("custom_tone_short", null)
+            val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+                putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
+                putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Short Tone")
+                putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false) // We have a clear button, so hide Silent
+                putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+
+                // Pre-select the current tone if one exists
+                if (currentUriString != null) {
+                    putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI,
+                        currentUriString.toUri())
+                }
+            }
+            pickShortTone.launch(intent)
+        }
+
+        findViewById<Button>(R.id.btnPickLong).setOnClickListener {
+            val currentUriString = prefs.getString("custom_tone_long", null)
+            val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+                putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
+                putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Long Tone")
+                putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+                putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+
+                if (currentUriString != null) {
+                    putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI,
+                        currentUriString.toUri())
+                }
+            }
+            pickLongTone.launch(intent)
+        }
 
         findViewById<ImageView>(R.id.btnClearShort).setOnClickListener {
             clearCustomTone("custom_tone_short", findViewById(R.id.txtShortToneName), it)
@@ -177,14 +232,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveCustomTone(uri: Uri, key: String, textView: TextView, clearBtn: View) {
-        contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        try {
+            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        } catch (_: Exception) {
+            // This is expected for system ringtones (content://media/internal/...), so we ignore it.
+        }
 
         prefs.edit {
             putString(key, uri.toString())
         }
 
-        val fileName = getFileName(uri) ?: getString(R.string.custom_audio)
-        textView.text = fileName
+        val ringtone = RingtoneManager.getRingtone(this, uri)
+        val name = ringtone?.getTitle(this) ?: "Custom Audio"
+
+        textView.text = name
         clearBtn.visibility = View.VISIBLE
     }
 
@@ -213,7 +274,7 @@ class MainActivity : AppCompatActivity() {
         if (uri.scheme == "content") {
             contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 if (cursor.moveToFirst()) {
-                    val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                     if (index >= 0) return cursor.getString(index)
                 }
             }
@@ -313,6 +374,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showAboutDialog() {
+        val appVersion = BuildConfig.VERSION_NAME
+
         val aboutMessage = """
         HRLY (Hourly) is a minimalist hourly chime app.
         
@@ -326,7 +389,7 @@ class MainActivity : AppCompatActivity() {
         tones can compound
         ---
         
-        Version 1.0
+        Version $appVersion
         2026 © Ltrademark
         All rights reserved.
     """.trimIndent()
@@ -359,5 +422,9 @@ class MainActivity : AppCompatActivity() {
         if (Settings.canDrawOverlays(this)) {
             setupVisualToggle()
         }
+
+        // Refresh tone names on resume
+        restoreToneState("custom_tone_short", findViewById(R.id.txtShortToneName), findViewById(R.id.btnClearShort))
+        restoreToneState("custom_tone_long", findViewById(R.id.txtLongToneName), findViewById(R.id.btnClearLong))
     }
 }
