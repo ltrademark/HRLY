@@ -1,7 +1,7 @@
 # HRLY To-Do List
 
 ## Current
-- [ ] Have it Respect when device is in DND
+- [x] Have it Respect when device is in DND
 - [ ] Add a "quiet hours" setting row (schedule a start and end period where the service is "disabled". re-enables itself).
   - [ ] Try to check if device can see if user has pre-set a "bedtime" that it can follow.
 - [ ] Add 3rd control to notification to "temporarily suspend", and if enabled, the option then turns into "enable". Of course, in the "suspend" state, there will not be a "skip" button option. 
@@ -20,5 +20,5 @@
 ---
 
 ## Nice-To-Haves
-- [ ] Localize app for other languages
 - [ ] Create a companion watch face for Wear OS
+- [ ] Localize app for other languages
