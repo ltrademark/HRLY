@@ -67,42 +67,6 @@
                     android:background="?android:listDivider"
                     android:alpha="0.2"/>
 
-                <LinearLayout
-                    android:id="@+id/containerVisual"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/enable_passive_aod"
-                            android:textSize="18sp"
-                            android:textColor="?android:textColor"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/enable_passive_aod_description"
-                            android:textSize="14sp"
-                            android:textColor="?android:textColorSecondary"/>
-                    </LinearLayout>
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switchVisual"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:contentDescription="@string/enable_passive_aod" />
-                </LinearLayout>
-
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
@@ -399,12 +363,17 @@
 
             </LinearLayout>
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
             <TextView
                 android:id="@+id/footerText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/footer_copyright"
-                android:textSize="12sp"
+                android:textSize="14sp"
                 android:textColor="?android:textColorSecondary"
                 android:padding="16dp"
                 android:clickable="true"
@@ -413,8 +382,8 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="128dp"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="8dp"/>
 
         </LinearLayout>
 

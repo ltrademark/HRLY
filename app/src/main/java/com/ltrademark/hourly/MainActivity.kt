@@ -77,7 +77,6 @@ class MainActivity : AppCompatActivity() {
         requestBatteryUnrestricted()
 
         setupServiceToggle()
-        setupVisualToggle()
         setupFooterDebug()
         setupCustomSounds()
         setupQuietHours()
@@ -132,8 +131,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupServiceToggle() {
         val switchService = findViewById<SwitchMaterial>(R.id.switchService)
-        val containerVisual = findViewById<LinearLayout>(R.id.containerVisual)
         val containerCustomSoundsToggle = findViewById<LinearLayout>(R.id.containerCustomSoundsToggle)
+        val containerQuietPickersToggle = findViewById<LinearLayout>(R.id.containerQuietToggle)
 
         // Listener
         switchService.setOnCheckedChangeListener { _, isChecked ->
@@ -142,8 +141,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             // Show/Hide dependent options
-            updateVisualContainerState(containerVisual, isChecked)
             updateVisualContainerState(containerCustomSoundsToggle, isChecked)
+            updateVisualContainerState(containerQuietPickersToggle, isChecked)
 
             if (isChecked) {
                 val intent = Intent(this, ChimeService::class.java)
@@ -158,8 +157,8 @@ class MainActivity : AppCompatActivity() {
         // Initial State
         val isServiceEnabled = prefs.getBoolean("service_enabled", false)
         switchService.isChecked = isServiceEnabled
-        updateVisualContainerState(containerVisual, isServiceEnabled)
         updateVisualContainerState(containerCustomSoundsToggle, isServiceEnabled)
+        updateVisualContainerState(containerQuietPickersToggle, isServiceEnabled)
     }
 
     private fun updateVisualContainerState(container: View, isEnabled: Boolean) {
@@ -282,30 +281,6 @@ class MainActivity : AppCompatActivity() {
         return uri.path?.let { path ->
             val cut = path.lastIndexOf('/')
             if (cut != -1) path.substring(cut + 1) else path
-        }
-    }
-
-    private fun setupVisualToggle() {
-        val switchVisual = findViewById<SwitchMaterial>(R.id.switchVisual)
-
-        if (!Settings.canDrawOverlays(this)) {
-            switchVisual.isChecked = false
-            switchVisual.setOnClickListener {
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri())
-                startActivity(intent)
-                Toast.makeText(this, "Please allow 'Display over other apps' first", Toast.LENGTH_LONG).show()
-                switchVisual.isChecked = false
-            }
-        } else {
-            switchVisual.isChecked = prefs.getBoolean("visual_enabled", false)
-            switchVisual.setOnClickListener(null) // Clear the previous listener
-            switchVisual.setOnCheckedChangeListener { _, isChecked ->
-                prefs.edit {
-                    putBoolean("visual_enabled", isChecked)
-                }
-                val status = if (isChecked) "Enabled" else "Disabled"
-                Toast.makeText(this, "Visual Pulse $status", Toast.LENGTH_SHORT).show()
-            }
         }
     }
 
@@ -474,17 +449,13 @@ class MainActivity : AppCompatActivity() {
 
         val isServiceEnabled = prefs.getBoolean("service_enabled", false)
         val switchService = findViewById<SwitchMaterial>(R.id.switchService)
-        val containerVisual = findViewById<LinearLayout>(R.id.containerVisual)
         val containerCustomSoundsToggle = findViewById<LinearLayout>(R.id.containerCustomSoundsToggle)
+        val containerQuietPickersToggle = findViewById<LinearLayout>(R.id.containerQuietToggle)
 
         if (switchService.isChecked != isServiceEnabled) {
             switchService.isChecked = isServiceEnabled
-            updateVisualContainerState(containerVisual, isServiceEnabled)
             updateVisualContainerState(containerCustomSoundsToggle, isServiceEnabled)
-        }
-
-        if (Settings.canDrawOverlays(this)) {
-            setupVisualToggle()
+            updateVisualContainerState(containerQuietPickersToggle, isServiceEnabled)
         }
 
         // Refresh tone names on resume
