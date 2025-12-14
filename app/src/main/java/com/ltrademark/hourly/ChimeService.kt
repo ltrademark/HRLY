@@ -49,6 +49,16 @@ class ChimeService : Service() {
             ACTION_PLAY_CHIME -> {
                 val testHour = intent.getIntExtra(EXTRA_TEST_HOUR, -1)
                 val hourToPlay = if (testHour != -1) testHour else Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+
+                if (testHour == -1) {
+                    scheduleNextChime()
+                }
+
+                if (isDndActive() && testHour == -1) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+
                 playSequenceForHour(hourToPlay)
 
                 if (testHour == -1) {
@@ -233,6 +243,13 @@ class ChimeService : Service() {
 
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.notify(1, notification)
+    }
+
+    private fun isDndActive(): Boolean {
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val currentFilter = notificationManager.currentInterruptionFilter
+
+        return currentFilter != NotificationManager.INTERRUPTION_FILTER_ALL
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
