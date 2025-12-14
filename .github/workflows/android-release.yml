@@ -27,18 +27,15 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 1. Build the Unsigned APK
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
-      # 2. Decode your Keystore from the Secret
       - name: Decode Keystore
         env:
           ENCODED_STRING: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
           echo "$ENCODED_STRING" | base64 --decode > release.jks
 
-      # 3. Sign the APK manually using apksigner
       - name: Sign APK
         run: |
           # Find the latest Android Build Tools installed on the server
@@ -58,13 +55,24 @@ jobs:
             --out "$OUTPUT_APK" \
             "$INPUT_APK"
 
-      # 4. Upload the SIGNED APK to Releases
+      - name: Rename APK
+        run: |
+          echo "Finding APK..."
+          # This finds any .apk in the release folder (signed or unsigned)
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          
+          echo "Found APK at: $APK_PATH"
+          echo "Renaming to: HRLY-${{ github.ref_name }}.apk"
+          
+          mv $APK_PATH app/build/outputs/apk/release/HRLY-${{ github.ref_name }}.apk
+            
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: app/build/outputs/apk/release/app-release-signed.apk
+          files: app/build/outputs/apk/release/HRLY-${{ github.ref_name }}.apk
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
+          generate_release_notes: true
           draft: false
           prerelease: false
         env:
