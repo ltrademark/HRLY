@@ -54,7 +54,7 @@ class ChimeService : Service() {
                     scheduleNextChime()
                 }
 
-                if (isDndActive() && testHour == -1) {
+                if (testHour == -1 && (isDndActive() || isQuietTime())) {
                     stopSelf()
                     return START_NOT_STICKY
                 }
@@ -250,6 +250,30 @@ class ChimeService : Service() {
         val currentFilter = notificationManager.currentInterruptionFilter
 
         return currentFilter != NotificationManager.INTERRUPTION_FILTER_ALL
+    }
+
+    private fun isQuietTime(): Boolean {
+        val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+        if (!prefs.getBoolean("quiet_enabled", false)) return false
+
+        val startH = prefs.getInt("quiet_start_h", 22)
+        val startM = prefs.getInt("quiet_start_m", 0)
+        val endH = prefs.getInt("quiet_end_h", 7)
+        val endM = prefs.getInt("quiet_end_m", 0)
+
+        val now = Calendar.getInstance()
+        val currentH = now.get(Calendar.HOUR_OF_DAY)
+        val currentM = now.get(Calendar.MINUTE)
+
+        val nowMinutes = currentH * 60 + currentM
+        val startMinutes = startH * 60 + startM
+        val endMinutes = endH * 60 + endM
+
+        return if (startMinutes < endMinutes) {
+            nowMinutes in startMinutes until endMinutes
+        } else {
+            nowMinutes >= startMinutes || nowMinutes < endMinutes
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.S)

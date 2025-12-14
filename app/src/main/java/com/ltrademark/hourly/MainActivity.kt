@@ -80,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         setupVisualToggle()
         setupFooterDebug()
         setupCustomSounds()
+        setupQuietHours()
     }
 
     private fun checkAndRequestPermissions() {
@@ -305,6 +306,59 @@ class MainActivity : AppCompatActivity() {
                 val status = if (isChecked) "Enabled" else "Disabled"
                 Toast.makeText(this, "Visual Pulse $status", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun setupQuietHours() {
+        val switchQuiet = findViewById<SwitchMaterial>(R.id.switchQuietHours)
+        val containerPickers = findViewById<LinearLayout>(R.id.containerQuietPickers)
+        val btnStart = findViewById<Button>(R.id.btnQuietStart)
+        val btnEnd = findViewById<Button>(R.id.btnQuietEnd)
+
+        val isEnabled = prefs.getBoolean("quiet_enabled", false)
+        var startH = prefs.getInt("quiet_start_h", 22)
+        var startM = prefs.getInt("quiet_start_m", 0)
+        var endH = prefs.getInt("quiet_end_h", 7)
+        var endM = prefs.getInt("quiet_end_m", 0)
+
+        fun updateTimeButton(btn: Button, hour: Int, min: Int) {
+            val calendar = java.util.Calendar.getInstance()
+            calendar.set(java.util.Calendar.HOUR_OF_DAY, hour)
+            calendar.set(java.util.Calendar.MINUTE, min)
+            val format = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault())
+            btn.text = format.format(calendar.time)
+        }
+
+        switchQuiet.isChecked = isEnabled
+        containerPickers.visibility = if (isEnabled) View.VISIBLE else View.GONE
+        updateTimeButton(btnStart, startH, startM)
+        updateTimeButton(btnEnd, endH, endM)
+
+        switchQuiet.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit { putBoolean("quiet_enabled", isChecked) }
+            if (isChecked) {
+                containerPickers.visibility = View.VISIBLE
+                containerPickers.alpha = 0f
+                containerPickers.animate().alpha(1f).setDuration(300).start()
+            } else {
+                containerPickers.visibility = View.GONE
+            }
+        }
+
+        btnStart.setOnClickListener {
+            android.app.TimePickerDialog(this, { _, h, m ->
+                startH = h; startM = m
+                prefs.edit { putInt("quiet_start_h", h); putInt("quiet_start_m", m) }
+                updateTimeButton(btnStart, h, m)
+            }, startH, startM, false).show()
+        }
+
+        btnEnd.setOnClickListener {
+            android.app.TimePickerDialog(this, { _, h, m ->
+                endH = h; endM = m
+                prefs.edit { putInt("quiet_end_h", h); putInt("quiet_end_m", m) }
+                updateTimeButton(btnEnd, h, m)
+            }, endH, endM, false).show()
         }
     }
 

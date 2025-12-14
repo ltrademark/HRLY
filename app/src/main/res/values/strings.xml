@@ -23,4 +23,9 @@
     <string name="custom_audio">Custom Audio</string>
     <string name="reset_to_default_tone">Reset to default tone</string>
 
+    <string name="quiet_hours">Quiet Hours</string>
+    <string name="quiet_hours_description">Pause chimes during specific times</string>
+    <string name="quiet_start">Start</string>
+    <string name="quiet_end">End</string>
+
 </resources>
