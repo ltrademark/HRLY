@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="48sp"
+            android:paddingTop="?attr/actionBarSize"
             android:paddingBottom="48dp">
 
             <LinearLayout
@@ -260,57 +260,68 @@
                     android:id="@+id/containerQuietPickers"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:baselineAligned="false"
+                    android:orientation="vertical"
                     android:visibility="gone"
                     android:paddingHorizontal="16dp"
                     android:paddingBottom="16dp">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:orientation="horizontal"
-                        android:gravity="center_horizontal">
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="@string/quiet_start"
-                            android:textColor="?android:textColorSecondary"/>
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/quiet_start"
+                                android:textColor="?android:textColor"/>
+
+                        </LinearLayout>
 
                         <Button
                             android:id="@+id/btnQuietStart"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_marginLeft="12dp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="10:00 PM" />
-
+                            android:text="10:00 PM"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
                     </LinearLayout>
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:orientation="horizontal"
-                        android:gravity="center_horizontal">
+                        android:gravity="center_vertical">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="@string/quiet_end"
-                            android:textColor="?android:textColorSecondary"/>
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/quiet_end"
+                                android:textColor="?android:textColor"/>
+
+                        </LinearLayout>
 
                         <Button
                             android:id="@+id/btnQuietEnd"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_marginLeft="12dp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="7:00 AM" />
-
+                            android:text="7:00 AM"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
                     </LinearLayout>
+
                 </LinearLayout>
 
             </LinearLayout>
@@ -382,8 +393,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="32dp"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginTop="32dp"/>
 
         </LinearLayout>
 

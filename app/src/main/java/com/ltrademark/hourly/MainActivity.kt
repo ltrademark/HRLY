@@ -133,16 +133,18 @@ class MainActivity : AppCompatActivity() {
         val switchService = findViewById<SwitchMaterial>(R.id.switchService)
         val containerCustomSoundsToggle = findViewById<LinearLayout>(R.id.containerCustomSoundsToggle)
         val containerQuietPickersToggle = findViewById<LinearLayout>(R.id.containerQuietToggle)
+        val containerQuietPickers = findViewById<LinearLayout>(R.id.containerQuietPickers)
 
-        // Listener
         switchService.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit {
                 putBoolean("service_enabled", isChecked)
             }
 
-            // Show/Hide dependent options
             updateVisualContainerState(containerCustomSoundsToggle, isChecked)
             updateVisualContainerState(containerQuietPickersToggle, isChecked)
+
+            val isQuietEnabled = prefs.getBoolean("quiet_enabled", false)
+            updateVisualContainerState(containerQuietPickers, isChecked && isQuietEnabled)
 
             if (isChecked) {
                 val intent = Intent(this, ChimeService::class.java)
@@ -154,11 +156,19 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Initial State
         val isServiceEnabled = prefs.getBoolean("service_enabled", false)
+        val isQuietEnabled = prefs.getBoolean("quiet_enabled", false)
+
         switchService.isChecked = isServiceEnabled
+
         updateVisualContainerState(containerCustomSoundsToggle, isServiceEnabled)
         updateVisualContainerState(containerQuietPickersToggle, isServiceEnabled)
+
+        if (isServiceEnabled && isQuietEnabled) {
+            containerQuietPickers.visibility = View.VISIBLE
+        } else {
+            containerQuietPickers.visibility = View.GONE
+        }
     }
 
     private fun updateVisualContainerState(container: View, isEnabled: Boolean) {
@@ -420,6 +430,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun showAboutDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_about, null)
 
@@ -458,7 +469,6 @@ class MainActivity : AppCompatActivity() {
             updateVisualContainerState(containerQuietPickersToggle, isServiceEnabled)
         }
 
-        // Refresh tone names on resume
         restoreToneState("custom_tone_short", findViewById(R.id.txtShortToneName), findViewById(R.id.btnClearShort))
         restoreToneState("custom_tone_long", findViewById(R.id.txtLongToneName), findViewById(R.id.btnClearLong))
     }
