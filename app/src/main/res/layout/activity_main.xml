@@ -17,6 +17,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:divider="@drawable/divider_item"
+            android:showDividers="middle"
             android:paddingTop="?attr/actionBarSize"
             android:paddingBottom="48dp">
 
@@ -24,6 +26,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
+                android:divider="@drawable/divider_item"
+                android:showDividers="middle"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <LinearLayout
@@ -60,18 +64,6 @@
                         android:layout_height="wrap_content"
                         android:contentDescription="@string/enable_hourly_chime" />
                 </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?android:listDivider"
-                    android:alpha="0.2"/>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?android:listDivider"
-                    android:alpha="0.2"/>
 
                 <LinearLayout
                     android:id="@+id/containerCustomSoundsToggle"
@@ -214,12 +206,6 @@
                     </LinearLayout>
 
                 </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?android:listDivider"
-                    android:alpha="0.2"/>
 
                 <LinearLayout
                     android:id="@+id/containerQuietToggle"
@@ -392,8 +378,7 @@
                 android:textAlignment="center"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="32dp"/>
+                app:layout_constraintEnd_toEndOf="parent"/>
 
         </LinearLayout>
 
