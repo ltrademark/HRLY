@@ -27,6 +27,7 @@ class ChimeService : Service() {
         const val ACTION_TEST_VISUAL = "com.ltrademark.hourly.ACTION_TEST_VISUAL"
         const val ACTION_SKIP_NEXT = "com.ltrademark.hourly.ACTION_SKIP_NEXT"
         const val ACTION_STOP_SERVICE = "com.ltrademark.hourly.ACTION_STOP_SERVICE"
+        const val ACTION_TOGGLE_SUSPEND = "com.ltrademark.hourly.ACTION_TOGGLE_SUSPEND"
 
         const val EXTRA_TEST_HOUR = "com.ltrademark.hourly.EXTRA_TEST_HOUR"
     }
@@ -46,6 +47,15 @@ class ChimeService : Service() {
         startForeground(1, createNotification())
 
         when (intent?.action) {
+            ACTION_TOGGLE_SUSPEND -> {
+                val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+                val currentState = prefs.getBoolean("is_suspended", false)
+                prefs.edit { putBoolean("is_suspended", !currentState) }
+
+                val notificationManager = getSystemService(NotificationManager::class.java)
+                notificationManager.notify(1, createNotification())
+            }
+
             ACTION_PLAY_CHIME -> {
                 val testHour = intent.getIntExtra(EXTRA_TEST_HOUR, -1)
                 val hourToPlay = if (testHour != -1) testHour else Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
@@ -54,8 +64,13 @@ class ChimeService : Service() {
                     scheduleNextChime()
                 }
 
-                if (testHour == -1 && (isDndActive() || isQuietTime())) {
-                    stopSelf()
+                val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+                val isSuspended = prefs.getBoolean("is_suspended", false)
+
+                if (testHour == -1 && (isDndActive() || isQuietTime() || isSuspended)) {
+                    if (!isSuspended) {
+                        stopSelf()
+                    }
                     return START_NOT_STICKY
                 }
 
@@ -153,6 +168,9 @@ class ChimeService : Service() {
     }
 
     private fun createNotification(): Notification {
+        val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+        val isSuspended = prefs.getBoolean("is_suspended", false)
+
         val channelId = "chime_channel"
         val importance = NotificationManager.IMPORTANCE_MIN
         val channel = NotificationChannel(channelId, "Hourly Chime Service", importance).apply {
@@ -176,17 +194,37 @@ class ChimeService : Service() {
             this, 0, mainIntent, PendingIntent.FLAG_IMMUTABLE
         )
 
-        return NotificationCompat.Builder(this, channelId)
-            .setContentTitle("HRLY Active")
-            .setContentText("Next chime at ${getNextChimeTime()}")
+        val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_stat_chime)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setCategory(Notification.CATEGORY_SERVICE)
             .setContentIntent(mainPendingIntent)
-            .addAction(android.R.drawable.ic_media_next, "Skip Next", skipPendingIntent)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Disable Hourly Chime", stopPendingIntent)
             .setOngoing(true)
-            .build()
+
+        if (isSuspended) {
+            val resumeIntent = Intent(this, ChimeService::class.java).apply { action = ACTION_TOGGLE_SUSPEND }
+            val resumePending = PendingIntent.getService(this, 3, resumeIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+            builder.setContentTitle(getString(R.string.status_suspended))
+            builder.setContentText(getString(R.string.status_suspended_description))
+            builder.addAction(android.R.drawable.ic_media_play, getString(R.string.action_resume), resumePending)
+
+        } else {
+            val skipIntent = Intent(this, ChimeService::class.java).apply { action = ACTION_SKIP_NEXT }
+            val skipPending = PendingIntent.getService(this, 1, skipIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+            val suspendIntent = Intent(this, ChimeService::class.java).apply { action = ACTION_TOGGLE_SUSPEND }
+            val suspendPending = PendingIntent.getService(this, 3, suspendIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+            builder.setContentTitle(getString(R.string.status_active))
+            builder.setContentText("Next chime at ${getNextChimeTime()}")
+            builder.addAction(android.R.drawable.ic_media_pause, getString(R.string.action_suspend), suspendPending)
+            builder.addAction(android.R.drawable.ic_media_next, "Skip Next Chime", skipPending)
+        }
+
+        builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Disable", stopPendingIntent)
+
+        return builder.build()
     }
 
     private fun stopChimeService() {

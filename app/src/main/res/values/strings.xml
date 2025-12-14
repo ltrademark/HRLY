@@ -28,4 +28,11 @@
     <string name="quiet_start">Start</string>
     <string name="quiet_end">End</string>
 
+    <!-- Notification Shade Actions -->
+    <string name="action_suspend">Pause</string>
+    <string name="action_resume">Resume</string>
+    <string name="status_suspended">HRLY Suspended</string>
+    <string name="status_suspended_description">Chimes are pause until you resume the service.</string>
+    <string name="status_active">HRLY Active</string>
+
 </resources>
