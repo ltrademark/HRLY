@@ -1,9 +1,8 @@
 # HRLY To-Do List
 
 ## Current
-- [ ] Remove A.O.D. visual
-- [ ] Cleanup and modernize "about" popup
-- [ ] Change "about" pop-up trigger icon to (❔).
+- [ ] Revisit Battery optimization permission flow
+- [ ] clean up comments, dead variables, and other old testing code (if i havent done that already).
 
 ## Completed
 - [x] Set up base project structure
@@ -16,6 +15,9 @@
 - [x] Add a "quiet hours" setting row (schedule a start and end period where the service is "disabled". re-enables itself).
   - [-] Try to check if device can see if user has pre-set a "bedtime" that it can follow.
 - [x] Add 3rd control to notification to "temporarily suspend", and if enabled, the option then turns into "enable". Of course, in the "suspend" state, there will not be a "skip" button option. 
+- [x] Remove A.O.D. visual
+- [x] Cleanup and modernize "about" popup
+- [x] Change "about" pop-up trigger icon to (❔).
 
 ---
 
