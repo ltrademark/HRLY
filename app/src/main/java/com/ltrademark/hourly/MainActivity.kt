@@ -446,35 +446,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showAboutDialog() {
-        val appVersion = BuildConfig.VERSION_NAME
+        val dialogView = layoutInflater.inflate(R.layout.dialog_about, null)
 
-        val aboutMessage = """
-        HRLY (Hourly) is a minimalist hourly chime app.
-        
-        Designed to help you keep track of time 
-        without checking your phone constantly.
-        
-        ---
-        1 short tone = 1 hour
-        1 long tone = 5 hours
-        
-        tones can compound
-        ---
-        
-        Version $appVersion
-        2026 © Ltrademark
-        All rights reserved.
-    """.trimIndent()
-
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("About HRLY")
-            .setMessage(aboutMessage)
-            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-            .setNeutralButton("View Source") { _, _ ->
-                val browserIntent = Intent(Intent.ACTION_VIEW, "https://github.com/ltrademark/HRLY".toUri())
-                startActivity(browserIntent)
-            }
+        val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
             .show()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        val txtVersion = dialogView.findViewById<TextView>(R.id.txtVersion)
+        txtVersion.text = "Version ${BuildConfig.VERSION_NAME}\n2026 © Ltrademark. All rights reserved."
+
+        val btnOk = dialogView.findViewById<Button>(R.id.btnAboutOk)
+        btnOk.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        val btnSource = dialogView.findViewById<Button>(R.id.btnAboutSource)
+        btnSource.setOnClickListener {
+            val browserIntent = Intent(Intent.ACTION_VIEW, "https://github.com/ltrademark/HRLY".toUri())
+            startActivity(browserIntent)
+        }
     }
 
     override fun onResume() {

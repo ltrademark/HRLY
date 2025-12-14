@@ -8,6 +8,8 @@
         <item name="colorOnPrimary">@color/dark_content_primary</item>
         <item name="colorSecondary">@color/dark_brand_secondary</item>
 
+        <item name="android:listDivider">@color/dark_border</item>
+
         <item name="colorControlNormal">@color/dark_content_primary</item>
         <item name="colorControlActivated">@color/dark_brand_primary</item>
 

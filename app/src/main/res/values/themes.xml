@@ -8,6 +8,8 @@
         <item name="colorOnPrimary">@color/light_content_primary</item>
         <item name="colorSecondary">@color/light_brand_secondary</item>
 
+        <item name="android:listDivider">@color/light_border</item>
+
         <item name="colorControlNormal">@color/light_content_primary</item>
         <item name="colorControlActivated">@color/light_brand_primary</item>
 

@@ -306,7 +306,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical"
+                        android:orientation="horizontal"
                         android:gravity="center_horizontal">
 
                         <TextView
@@ -318,16 +318,18 @@
                         <Button
                             android:id="@+id/btnQuietStart"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_marginLeft="12dp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="10:00 PM"/>
+                            android:text="10:00 PM" />
+
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical"
+                        android:orientation="horizontal"
                         android:gravity="center_horizontal">
 
                         <TextView
@@ -339,9 +341,11 @@
                         <Button
                             android:id="@+id/btnQuietEnd"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_marginLeft="12dp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="7:00 AM"/>
+                            android:text="7:00 AM" />
+
                     </LinearLayout>
                 </LinearLayout>
 
@@ -397,7 +401,7 @@
 
             <TextView
                 android:id="@+id/footerText"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/footer_copyright"
                 android:textSize="12sp"
@@ -405,6 +409,7 @@
                 android:padding="16dp"
                 android:clickable="true"
                 android:focusable="true"
+                android:textAlignment="center"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
