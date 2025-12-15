@@ -2,6 +2,8 @@
 
 ## Current
 - [ ] Revisit Battery optimization permission flow
+- [ ] Add Widget Visual
+- [ ] Optional Vibration feature (for slient modes, or whatever)
 - [ ] clean up comments, dead variables, and other old testing code (if i havent done that already).
 
 ## Completed
