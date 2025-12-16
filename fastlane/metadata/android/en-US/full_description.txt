@@ -1,0 +1,1 @@
+HRLY (Hourly) is a minimalist hourly chime app designed to help you keep track of time without constantly checking your phone. It uses a simple system of long and short tones to signify the hour, running quietly in the background.
