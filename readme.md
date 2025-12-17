@@ -15,8 +15,10 @@ HRLY (Hourly) is a minimalist hourly chime app designed to help you keep track o
 ## How It Works
 
 The app uses a combination of two sounds to represent the time:
-*   **1 short tone** = 1 hour
-*   **1 long tone** = 5 hours
+| Tone Length | Time | 
+| --- | --- |
+| Short | 1 Hour |
+| Long | 5 Hours |
 
 These tones compound to announce the current hour. For example, 7:00 will be announced with one long tone and two short tones.
 
