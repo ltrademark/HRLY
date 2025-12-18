@@ -1,10 +1,9 @@
 # HRLY To-Do List
 
 ## Current
-- [ ] Revisit Battery optimization permission flow
 - [ ] Add Widget Visual
-- [ ] Optional Vibration feature (for slient modes, or whatever)
-- [ ] clean up comments, dead variables, and other old testing code (if i havent done that already).
+- [ ] Optional Vibration feature (for silent modes, or whatever)
+- [ ] clean up comments, dead variables, and other old testing code (if i haven't done that already).
 
 ## Completed
 - [x] Set up base project structure
@@ -20,6 +19,7 @@
 - [x] Remove A.O.D. visual
 - [x] Cleanup and modernize "about" popup
 - [x] Change "about" pop-up trigger icon to (❔).
+- [x] Revisit Battery optimization permission flow
 
 ---
 

@@ -11,6 +11,8 @@
     <string name="force_chime_now">Force Chime Now</string>
     <string name="test_visual_pulse">Test Visual Pulse Only</string>
     <string name="footer_copyright">⠇⠞⠗⠁⠙⠑⠍⠁⠗⠅</string>
+    <string name="battery_warning_text">Battery optimization may stop chimes from playing.</string>
+    <string name="fix_button">FIX</string>
 
     <!-- Custom Sound Settings -->
     <string name="custom_sounds">Custom Sounds</string>

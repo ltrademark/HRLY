@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
 
         checkAndRequestPermissions()
-        requestBatteryUnrestricted()
+        setupBatteryWarning()
 
         setupServiceToggle()
         setupFooterDebug()
@@ -106,18 +106,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("BatteryLife")
-    private fun requestBatteryUnrestricted() {
-        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
-        if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
-            val intent = Intent(
-                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                "package:$packageName".toUri()
-            )
-            startActivity(intent)
-        }
-    }
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == notificationPermissionsCode) {
@@ -125,6 +113,46 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Notifications allowed", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(this, "Permission denied. Service status won\'t be visible.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    @SuppressLint("BatteryLife")
+    private fun setupBatteryWarning() {
+        val containerWarning = findViewById<LinearLayout>(R.id.containerBatteryWarning)
+        val btnFix = findViewById<Button>(R.id.btnFixBattery)
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+        val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+
+        fun updateWarningVisibility() {
+            val isServiceEnabled = prefs.getBoolean("service_enabled", false)
+            val isIgnored = powerManager.isIgnoringBatteryOptimizations(packageName)
+
+            if (isServiceEnabled && !isIgnored) {
+                containerWarning.visibility = View.VISIBLE
+            } else {
+                containerWarning.visibility = View.GONE
+            }
+        }
+
+        updateWarningVisibility()
+
+        btnFix.setOnClickListener {
+            try {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = "package:$packageName".toUri()
+                }
+                startActivity(intent)
+            } catch (e: Exception) {
+                try {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = "package:$packageName".toUri()
+                    }
+                    startActivity(intent)
+                    Toast.makeText(this, "Go to Battery > Unrestricted", Toast.LENGTH_LONG).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Could not open settings", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -462,6 +490,8 @@ class MainActivity : AppCompatActivity() {
         val switchService = findViewById<SwitchMaterial>(R.id.switchService)
         val containerCustomSoundsToggle = findViewById<LinearLayout>(R.id.containerCustomSoundsToggle)
         val containerQuietPickersToggle = findViewById<LinearLayout>(R.id.containerQuietToggle)
+
+        setupBatteryWarning()
 
         if (switchService.isChecked != isServiceEnabled) {
             switchService.isChecked = isServiceEnabled

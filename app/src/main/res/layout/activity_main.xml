@@ -66,6 +66,46 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/containerBatteryWarning"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp"
+                    android:paddingBottom="16dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/stat_notify_error"
+                        app:tint="#FF6E40"
+                        android:contentDescription="Warning"
+                        android:layout_marginEnd="12dp"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/battery_warning_text"
+                        android:textColor="#FF6E40"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="12dp"/>
+
+                    <Button
+                        android:id="@+id/btnFixBattery"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/fix_button"
+                        android:textColor="#FF6E40"
+                        app:strokeColor="#FF6E40"
+                        app:cornerRadius="50dp"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="16dp"/>
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/containerCustomSoundsToggle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -155,6 +195,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/choose_sound"
+                            app:cornerRadius="50dp"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
                     </LinearLayout>
 
@@ -202,6 +243,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/choose_sound"
+                            app:cornerRadius="50dp"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
                     </LinearLayout>
 
@@ -239,6 +281,7 @@
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/switchQuietHours"
                         android:layout_width="wrap_content"
+                        android:contentDescription="@string/quiet_hours_description"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
 
@@ -277,6 +320,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="10:00 PM"
+                            app:cornerRadius="50dp"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
                     </LinearLayout>
 
@@ -305,6 +349,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="7:00 AM"
+                            app:cornerRadius="50dp"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
                     </LinearLayout>
 
@@ -335,6 +380,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@android:color/white"
+                    app:cornerRadius="50dp"
                     android:text="@string/test_8_logic" />
 
                 <Button
@@ -342,6 +388,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@android:color/white"
+                    app:cornerRadius="50dp"
                     android:text="@string/test_12_logic" />
 
                 <Button
@@ -349,6 +396,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@android:color/white"
+                    app:cornerRadius="50dp"
                     android:text="@string/force_chime_now" />
 
                 <Button
@@ -356,7 +404,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/test_visual_pulse"
-                    android:textColor="@android:color/white" />
+                    android:textColor="@android:color/white"
+                    app:cornerRadius="50dp"/>
 
             </LinearLayout>
 
