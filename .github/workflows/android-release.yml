@@ -36,6 +36,15 @@ jobs:
         run: |
           echo "$ENCODED_STRING" | base64 --decode > release.jks
 
+      - name: Zipalign APK
+        run: |
+          BUILD_TOOLS_VERSION=$(ls "$ANDROID_SDK_ROOT/build-tools" | sort -V | tail -n 1)
+          ZIPALIGN="$ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS_VERSION/zipalign"
+          INPUT_APK="app/build/outputs/apk/release/app-release-unsigned.apk"
+          ALIGNED_APK="app/build/outputs/apk/release/app-release-aligned.apk"
+          
+          "$ZIPALIGN" -v 4 "$INPUT_APK" "$ALIGNED_APK"
+
       - name: Sign APK
         run: |
           # Find the latest Android Build Tools installed on the server
@@ -49,6 +58,8 @@ jobs:
           
           # Run the signer
           "$APKSIGNER" sign --ks release.jks \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
             --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
             --ks-pass "pass:${{ secrets.KEYSTORE_PASSWORD }}" \
             --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
