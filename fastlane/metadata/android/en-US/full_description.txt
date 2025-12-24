@@ -1,1 +1,12 @@
 HRLY (Hourly) is a minimalist hourly chime app designed to help you keep track of time without constantly checking your phone. It uses a simple system of long and short tones to signify the hour, running quietly in the background.
+
+✨ Features
+
+- Simple Time System: Easily learn the time-telling system.
+- Customizable Sounds: Use your own audio files for both the short and long tones.
+- Notification Controls: Skip the next chime or stop the service directly from the notification.
+- Background Service: Runs efficiently in the background to chime on the hour.
+- Optional Visual Pulse: An optional visual pulse can accompany the chime on the lock screen. (Still working out some kinks)
+- User Control: Easily enable or disable the main chime service, visuals, and custom sounds.
+- Minimalist Design: A clean, no-frills interface.
+- Open Source: A "View Source" button provides a quick link to the project's GitHub page.
