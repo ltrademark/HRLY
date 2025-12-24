@@ -42,7 +42,7 @@ jobs:
           ZIPALIGN="$ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS_VERSION/zipalign"
           APKSIGNER="$ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS_VERSION/apksigner"
           
-          "$ZIPALIGN" -v 4 app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
+          "$ZIPALIGN" -P 16 -f -v 4 app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
           
           "$APKSIGNER" sign --ks release.jks \
             --v1-signing-enabled true \
@@ -53,6 +53,9 @@ jobs:
             --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
             --out HRLY-signed.apk \
             aligned.apk
+          
+          # Confirm apk alignment
+          "$ZIPALIGN" -c -P 16 -v 4 existing.apk
 
       - name: Rename APK
         run: |
