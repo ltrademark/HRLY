@@ -55,7 +55,7 @@ jobs:
             aligned.apk
           
           # Confirm apk alignment
-          "$ZIPALIGN" -c -P 16 -v 4 existing.apk
+          "$ZIPALIGN" -c -P 16 -v 4 aligned.apk
 
       - name: Rename APK
         run: |
