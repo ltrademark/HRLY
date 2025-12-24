@@ -45,28 +45,22 @@ jobs:
           "$ZIPALIGN" -P 16 -f -v 4 app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
           
           "$APKSIGNER" sign --ks release.jks \
-            --v1-signing-enabled true \
-            --v2-signing-enabled true \
-            --min-sdk-version 21 \
-            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
-            --ks-pass "pass:${{ secrets.KEYSTORE_PASSWORD }}" \
-            --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
-            --out HRLY-signed.apk \
-            aligned.apk
+          --v1-signing-enabled true \
+          --v2-signing-enabled true \
+          --min-sdk-version 21 \
+          --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
+          --ks-pass "pass:${{ secrets.KEYSTORE_PASSWORD }}" \
+          --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
+          --out HRLY-signed.apk \
+          aligned.apk
           
-          # Confirm apk alignment
-          "$ZIPALIGN" -c -P 16 -v 4 aligned.apk
+          # Verify alignment of the NEW signed file
+          "$ZIPALIGN" -c -P 16 -v 4 HRLY-signed.apk
 
-      - name: Rename APK
+      - name: Rename and Move APK
         run: |
-          echo "Finding APK..."
-          # This finds any .apk in the release folder (signed or unsigned)
-          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
-          
-          echo "Found APK at: $APK_PATH"
-          echo "Renaming to: HRLY-${{ github.ref_name }}.apk"
-          
-          mv $APK_PATH app/build/outputs/apk/release/HRLY-${{ github.ref_name }}.apk
+          echo "Moving Signed APK..."
+          mv HRLY-signed.apk app/build/outputs/apk/release/HRLY-${{ github.ref_name }}.apk
             
       - name: Create Release
         uses: softprops/action-gh-release@v1
