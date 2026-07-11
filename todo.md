@@ -2,8 +2,15 @@
 
 ## Current
 - [ ] Add Widget Visual
-- [ ] Optional Vibration feature (for silent modes, or whatever)
+- [ ] Optional Vibration feature (for silent modes, or whatever) — GH #11 (play on vibrate, keep respecting DND)
 - [ ] clean up comments, dead variables, and other old testing code (if i haven't done that already).
+
+## Feature Backlog (from GitHub issues)
+- [ ] #6 User-defined delay between chimes (also covers tcely's ask in #2)
+- [ ] #3 Option to use only one type of tone (short *or* long)
+- [ ] #4 Optional half-hour chime alongside the hourly chime
+- [ ] #7 Option to disable the "next chime at" notification
+- [ ] #8 Chime once with a single sound (feature part; the "default still plays" part is the #2 bug, now fixed)
 
 ## Completed
 - [x] Set up base project structure
