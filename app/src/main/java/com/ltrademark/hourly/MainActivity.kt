@@ -228,34 +228,21 @@ class MainActivity : AppCompatActivity() {
         restoreToneState("custom_tone_long", findViewById(R.id.txtLongToneName), findViewById(R.id.btnClearLong))
 
         findViewById<Button>(R.id.btnPickShort).setOnClickListener {
-            val currentUriString = prefs.getString("custom_tone_short", null)
             val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
                 putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
                 putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Short Tone")
                 putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false) // We have a clear button, so hide Silent
                 putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
-
-                // Pre-select the current tone if one exists
-                if (currentUriString != null) {
-                    putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI,
-                        currentUriString.toUri())
-                }
             }
             pickShortTone.launch(intent)
         }
 
         findViewById<Button>(R.id.btnPickLong).setOnClickListener {
-            val currentUriString = prefs.getString("custom_tone_long", null)
             val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
                 putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
                 putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Long Tone")
                 putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
                 putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
-
-                if (currentUriString != null) {
-                    putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI,
-                        currentUriString.toUri())
-                }
             }
             pickLongTone.launch(intent)
         }
@@ -269,38 +256,58 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveCustomTone(uri: Uri, key: String, textView: TextView, clearBtn: View) {
-        try {
-            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        } catch (_: Exception) {
-            // This is expected for system ringtones (content://media/internal/...), so we ignore it.
+        // Copy the picked audio into app-private storage while we still hold the
+        // transient read grant from the picker. The background service later plays
+        // this local copy, which avoids losing access to the content:// URI once the
+        // app process restarts — the cause of the custom tone silently reverting to
+        // the default (#2).
+        val destFile = java.io.File(filesDir, key)
+        val copied = try {
+            contentResolver.openInputStream(uri)?.use { input ->
+                destFile.outputStream().use { output -> input.copyTo(output) }
+            } != null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
+
+        if (!copied) {
+            Toast.makeText(this, "Couldn't save that sound. Try another file.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val name = getFileName(uri) ?: RingtoneManager.getRingtone(this, uri)?.getTitle(this)
+            ?: getString(R.string.custom_audio)
 
         prefs.edit {
-            putString(key, uri.toString())
+            putString(key, destFile.absolutePath)
+            putString("${key}_name", name)
         }
-
-        val ringtone = RingtoneManager.getRingtone(this, uri)
-        val name = ringtone?.getTitle(this) ?: "Custom Audio"
 
         textView.text = name
         clearBtn.visibility = View.VISIBLE
     }
 
     private fun restoreToneState(key: String, textView: TextView, clearBtn: View) {
-        val uriString = prefs.getString(key, null)
-        if (uriString != null) {
-            val fileName = getFileName(uriString.toUri()) ?: getString(R.string.custom_audio)
-            textView.text = fileName
+        val path = prefs.getString(key, null)
+        if (path != null && java.io.File(path).exists()) {
+            textView.text = prefs.getString("${key}_name", null) ?: getString(R.string.custom_audio)
             clearBtn.visibility = View.VISIBLE
         } else {
+            // No tone set, or the stored copy is gone — show the default.
+            if (path != null) prefs.edit { remove(key); remove("${key}_name") }
             textView.text = getString(R.string.default_tone)
             clearBtn.visibility = View.GONE
         }
     }
 
     private fun clearCustomTone(key: String, textView: TextView, clearBtn: View) {
+        prefs.getString(key, null)?.let { path ->
+            try { java.io.File(path).delete() } catch (_: Exception) {}
+        }
         prefs.edit {
             remove(key)
+            remove("${key}_name")
         }
         textView.text = getString(R.string.default_tone)
         clearBtn.visibility = View.GONE
