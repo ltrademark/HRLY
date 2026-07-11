@@ -1,3 +1,8 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+# Machine- and session-specific IDE state
+/deploymentTargetSelector.xml
+/deviceManager.xml
+/.name
+/codeStyles/
