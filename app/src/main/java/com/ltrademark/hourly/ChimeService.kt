@@ -13,11 +13,10 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.ImageView
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
-import androidx.core.net.toUri
 import kotlinx.coroutines.*
+import java.io.File
 import java.util.*
 
 class ChimeService : Service() {
@@ -42,7 +41,6 @@ class ChimeService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    @RequiresApi(Build.VERSION_CODES.S)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(1, createNotification())
 
@@ -99,7 +97,6 @@ class ChimeService : Service() {
         return START_STICKY
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     private suspend fun playTone(defaultResId: Int, duration: Long, type: String) {
         val mediaPlayer = MediaPlayer()
         val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
@@ -113,11 +110,16 @@ class ChimeService : Service() {
             else -> null
         }
 
-        val customUriString = if (customKey != null) prefs.getString(customKey, null) else null
+        // Custom tones are copied into app-private storage at selection time, so we
+        // play that local file here. This service runs in a background/restarted
+        // process that has no read grant for the original content:// URI, which is
+        // why playing the URI directly silently failed and fell back to default (#2).
+        val customPath = if (customKey != null) prefs.getString(customKey, null) else null
+        val customFile = customPath?.let { File(it) }?.takeIf { it.exists() }
 
         try {
-            if (customUriString != null) {
-                mediaPlayer.setDataSource(this, customUriString.toUri())
+            if (customFile != null) {
+                mediaPlayer.setDataSource(customFile.absolutePath)
             } else {
                 val afd = resources.openRawResourceFd(defaultResId)
                 mediaPlayer.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
@@ -138,16 +140,27 @@ class ChimeService : Service() {
 
         } catch (e: Exception) {
             e.printStackTrace()
-            if (customUriString != null) {
-                mediaPlayer.release()
+            mediaPlayer.release()
+            if (customFile != null) {
+                // A real custom tone failed to play — tell the user instead of
+                // silently substituting the default, then fall back so the hour is
+                // still audibly marked.
+                notifyPlaybackError()
                 playTone(defaultResId, duration, "fallback")
-            } else {
-                mediaPlayer.release()
             }
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
+    private fun notifyPlaybackError() {
+        val notification = NotificationCompat.Builder(this, "chime_channel")
+            .setContentTitle("HRLY")
+            .setContentText("Couldn't play the custom tone — using the default instead.")
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+        getSystemService(NotificationManager::class.java).notify(998, notification)
+    }
+
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -244,9 +257,7 @@ class ChimeService : Service() {
         stopSelf()
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     private fun skipNextChime() {
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, ChimeReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -259,13 +270,7 @@ class ChimeService : Service() {
             set(Calendar.MILLISECOND, 0)
         }
 
-        if (alarmManager.canScheduleExactAlarms()) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
-        }
+        scheduleExactAlarm(calendar.timeInMillis, pendingIntent)
 
         val channelId = "chime_channel"
         val notification = NotificationCompat.Builder(this, channelId)
@@ -314,7 +319,6 @@ class ChimeService : Service() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     private fun playSequenceForHour(hour24: Int) {
         serviceScope.launch {
             val hour12 = if (hour24 % 12 == 0) 12 else hour24 % 12
@@ -448,9 +452,7 @@ class ChimeService : Service() {
             .start()
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     private fun scheduleNextChime() {
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, ChimeReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -463,22 +465,29 @@ class ChimeService : Service() {
             set(Calendar.MILLISECOND, 0)
         }
 
-        if (alarmManager.canScheduleExactAlarms()) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
-        } else {
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            val errorNotification = NotificationCompat.Builder(this, "chime_channel")
-                .setContentTitle("HRLY Error")
-                .setContentText("Permission missing! Cannot schedule alarms.")
-                .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .build()
-            notificationManager.notify(999, errorNotification)
-        }
+        scheduleExactAlarm(calendar.timeInMillis, pendingIntent)
+    }
+
+    /**
+     * Schedules the chime alarm for the given time.
+     *
+     * Uses setAlarmClock() instead of setExactAndAllowWhileIdle(): the latter is still
+     * deferrable by Doze / OEM alarm-batching, which made chimes fire minutes late (#10).
+     * setAlarmClock is exempt from those delays. It also does NOT require the
+     * SCHEDULE_EXACT_ALARM permission, so we no longer call canScheduleExactAlarms() —
+     * that API only exists on API 31+ and crashed on Android 8-11 (#1).
+     *
+     * Trade-off: setAlarmClock surfaces a standing alarm indicator in the status bar.
+     */
+    private fun scheduleExactAlarm(triggerAtMillis: Long, pendingIntent: PendingIntent) {
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        val showIntent = PendingIntent.getActivity(
+            this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.setAlarmClock(
+            AlarmManager.AlarmClockInfo(triggerAtMillis, showIntent),
+            pendingIntent
+        )
     }
 
     override fun onDestroy() {
