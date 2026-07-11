@@ -345,7 +345,8 @@ class MainActivity : AppCompatActivity() {
             val calendar = java.util.Calendar.getInstance()
             calendar.set(java.util.Calendar.HOUR_OF_DAY, hour)
             calendar.set(java.util.Calendar.MINUTE, min)
-            val format = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault())
+            // Respect the system 12/24-hour clock setting instead of forcing 12h (#9).
+            val format = android.text.format.DateFormat.getTimeFormat(this)
             btn.text = format.format(calendar.time)
         }
 
@@ -370,7 +371,7 @@ class MainActivity : AppCompatActivity() {
                 startH = h; startM = m
                 prefs.edit { putInt("quiet_start_h", h); putInt("quiet_start_m", m) }
                 updateTimeButton(btnStart, h, m)
-            }, startH, startM, false).show()
+            }, startH, startM, android.text.format.DateFormat.is24HourFormat(this)).show()
         }
 
         btnEnd.setOnClickListener {
@@ -378,7 +379,7 @@ class MainActivity : AppCompatActivity() {
                 endH = h; endM = m
                 prefs.edit { putInt("quiet_end_h", h); putInt("quiet_end_m", m) }
                 updateTimeButton(btnEnd, h, m)
-            }, endH, endM, false).show()
+            }, endH, endM, android.text.format.DateFormat.is24HourFormat(this)).show()
         }
     }
 
