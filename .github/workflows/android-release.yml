@@ -61,13 +61,22 @@ jobs:
         run: |
           echo "Moving Signed APK..."
           mv HRLY-signed.apk app/build/outputs/apk/release/HRLY-${{ github.ref_name }}.apk
-            
+
+      - name: Find latest changelog
+        id: changelog
+        run: |
+          DIR="fastlane/metadata/android/en-US/changelogs"
+          LATEST=$(ls "$DIR" | grep -E '^[0-9]+\.txt$' | sort -n | tail -n 1)
+          echo "Using changelog: $DIR/$LATEST"
+          echo "file=$DIR/$LATEST" >> "$GITHUB_OUTPUT"
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: app/build/outputs/apk/release/HRLY-${{ github.ref_name }}.apk
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
+          body_path: ${{ steps.changelog.outputs.file }}
           generate_release_notes: true
           draft: false
           prerelease: false
