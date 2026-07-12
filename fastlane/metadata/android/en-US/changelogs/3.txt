@@ -1,0 +1,5 @@
+- New: Quiet Hours, to pause chimes during times you choose
+- Now respects Do Not Disturb
+- Pause and resume straight from the notification
+- Refined dialogs and layout
+- Removed the experimental always-on-display feature

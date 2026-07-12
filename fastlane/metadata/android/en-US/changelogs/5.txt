@@ -1,0 +1,7 @@
+Bug-fix release.
+
+- Fixed a startup crash on some devices
+- Custom sounds now stick instead of reverting to the default
+- Quiet-hours picker follows your system 24-hour clock setting
+- More reliable hourly scheduling
+- Updated build tooling

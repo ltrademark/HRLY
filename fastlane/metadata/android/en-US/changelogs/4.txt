@@ -1,0 +1,4 @@
+- Battery-optimization guidance so chimes aren't stopped in the background
+- Clearer display of the hourly time
+- Added an MIT license and F-Droid store listing assets
+- More reliable signed release builds

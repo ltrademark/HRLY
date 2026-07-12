@@ -1,0 +1,5 @@
+First release of HRLY.
+
+- Plays a tone every hour, on the hour
+- Option to use your own custom sounds
+- Simple, single-screen settings

@@ -1,0 +1,3 @@
+- Reworked the hourly chime logic for more reliable playback
+- Improved runtime permission handling
+- Small fixes and polish

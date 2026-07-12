@@ -1,0 +1,7 @@
+- New: Single chime mode, one tone each hour instead of counting out the hour
+- New: Vibrate alongside the chime (Do Not Disturb is still respected)
+- New: Custom timing to adjust the gap between tones, with a Reset to default
+- New: Trim custom sounds in a waveform editor. Drag the handles or type exact start and end times, with length hints that keep the hourly count easy to follow
+- New: Minimize the ongoing notification
+- Preview button now plays on the correct volume and no longer stutters
+- Various layout and wording polish
