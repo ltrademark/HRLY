@@ -9,7 +9,6 @@
     <string name="test_8_logic">Test 8:00 Logic</string>
     <string name="test_12_logic">Test 12:00 Logic</string>
     <string name="force_chime_now">Force Chime Now</string>
-    <string name="test_visual_pulse">Test Visual Pulse Only</string>
     <string name="footer_copyright">⠇⠞⠗⠁⠙⠑⠍⠁⠗⠅</string>
     <string name="battery_warning_text">Battery optimization may stop chimes from playing.</string>
     <string name="fix_button">FIX</string>
@@ -19,8 +18,10 @@
     <string name="custom_sounds_description">Use your own audio files</string>
     <string name="short_tone">Short Tone</string>
     <string name="long_tone">Long Tone</string>
+    <string name="tone">Tone</string>
     <string name="default_tone">Default</string>
     <string name="choose_sound">Choose</string>
+    <string name="change_sound">Change</string>
     <string name="clear_sound_selection">Clear sound selection</string>
     <string name="custom_audio">Custom Audio</string>
     <string name="reset_to_default_tone">Reset to default tone</string>
@@ -29,6 +30,42 @@
     <string name="quiet_hours_description">Pause chimes during specific times</string>
     <string name="quiet_start">From</string>
     <string name="quiet_end">To</string>
+
+    <!-- Single chime mode (#3 / #8) -->
+    <string name="single_chime">Single chime</string>
+    <string name="single_chime_description">Play one tone each hour instead of counting the hour</string>
+
+    <!-- Vibration (#11) -->
+    <string name="vibrate">Vibrate</string>
+    <string name="vibrate_description">Also vibrate when chiming (Do Not Disturb is still respected)</string>
+
+    <!-- Minimize notification (#7) -->
+    <string name="minimize_notification">Minimize notification</string>
+    <string name="minimize_notification_description">Reduce it to the minimum Android allows for a background service (the icon can\'t be fully removed)</string>
+
+    <!-- Chime timing / crop (#6) -->
+    <string name="chime_timing">Custom timing</string>
+    <string name="chime_timing_description">Adjust the gap between tones and trim custom sounds</string>
+    <string name="tone_gap_label">Gap between tones</string>
+    <string name="tone_gap_value">%1$d ms</string>
+    <string name="reset">Reset</string>
+    <string name="tone_gap_warning">Very short or very long gaps can defeat the purpose of a clear hourly cue.</string>
+    <string name="trim_sound">Trim</string>
+    <string name="crop_title">Trim tone</string>
+    <string name="crop_range_label">Drag to set the start and end of the tone</string>
+    <string name="crop_start_label">Start</string>
+    <string name="crop_end_label">End</string>
+    <string name="crop_length">Length: %1$s</string>
+    <string name="crop_seconds_suffix">s</string>
+    <string name="crop_recommended">Recommended: about %1$s</string>
+    <string name="crop_warn_short_band">Unusual length for a short tone. The hourly count may be harder to follow.</string>
+    <string name="crop_warn_long_band">Unusual length for a long tone. The hourly count may be harder to follow.</string>
+    <string name="crop_warn_indistinct">Close to your other tone\'s length, so long and short may be hard to tell apart when counting.</string>
+    <string name="crop_preview">Preview</string>
+    <string name="crop_save">Save</string>
+    <string name="crop_cancel">Cancel</string>
+    <string name="crop_too_short">Selection is too short.</string>
+    <string name="crop_no_custom">Choose a custom sound first, then trim it.</string>
 
     <!-- Notification Shade Actions -->
     <string name="action_suspend">Pause</string>

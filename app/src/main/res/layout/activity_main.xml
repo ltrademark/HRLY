@@ -30,6 +30,7 @@
                 android:showDividers="middle"
                 app:layout_constraintTop_toTopOf="parent">
 
+                <!-- Enable Hourly Chime (always visible) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -105,57 +106,23 @@
                         android:paddingHorizontal="16dp"/>
                 </LinearLayout>
 
+                <!-- All chime configuration, shown only while the service is enabled -->
                 <LinearLayout
-                    android:id="@+id/containerCustomSoundsToggle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:visibility="gone"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/custom_sounds"
-                            android:textSize="18sp"
-                            android:textColor="?android:textColor"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/custom_sounds_description"
-                            android:textSize="14sp"
-                            android:textColor="?android:textColorSecondary"/>
-                    </LinearLayout>
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switchCustomSounds"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/containerSoundPickers"
+                    android:id="@+id/containerSettings"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:visibility="gone"
-                    android:paddingHorizontal="16dp"
-                    android:paddingBottom="16dp">
+                    android:divider="@drawable/divider_item"
+                    android:showDividers="middle">
 
+                    <!-- Single chime (#3/#8) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:padding="16dp">
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -166,44 +133,38 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/short_tone"
+                                android:text="@string/single_chime"
+                                android:textSize="18sp"
                                 android:textColor="?android:textColor"/>
 
                             <TextView
-                                android:id="@+id/txtShortToneName"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/default_tone"
-                                android:textSize="12sp"
+                                android:text="@string/single_chime_description"
+                                android:textSize="14sp"
                                 android:textColor="?android:textColorSecondary"/>
                         </LinearLayout>
 
-                        <ImageView
-                            android:id="@+id/btnClearShort"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@android:drawable/ic_menu_close_clear_cancel"
-                            android:visibility="gone"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:contentDescription="@string/clear_sound_selection"
-                            android:layout_marginEnd="16dp"
-                            app:tint="?android:textColorSecondary" />
-
-                        <Button
-                            android:id="@+id/btnPickShort"
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchSimpleMode"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/choose_sound"
-                            app:cornerRadius="50dp"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                            android:contentDescription="@string/single_chime" />
                     </LinearLayout>
 
+                    <!-- Custom Sounds + its pickers grouped so no divider splits them -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/containerCustomSoundsToggle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:gravity="center_vertical"
+                        android:padding="16dp">
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -214,92 +175,166 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/long_tone"
+                                android:text="@string/custom_sounds"
+                                android:textSize="18sp"
                                 android:textColor="?android:textColor"/>
 
                             <TextView
-                                android:id="@+id/txtLongToneName"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/default_tone"
-                                android:textSize="12sp"
+                                android:text="@string/custom_sounds_description"
+                                android:textSize="14sp"
                                 android:textColor="?android:textColorSecondary"/>
                         </LinearLayout>
 
-                        <ImageView
-                            android:id="@+id/btnClearLong"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@android:drawable/ic_menu_close_clear_cancel"
-                            android:visibility="gone"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:contentDescription="@string/clear_sound_selection"
-                            android:layout_marginEnd="16dp"
-                            app:tint="?android:textColorSecondary" />
-
-                        <Button
-                            android:id="@+id/btnPickLong"
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchCustomSounds"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/choose_sound"
-                            app:cornerRadius="50dp"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                            android:layout_height="wrap_content" />
                     </LinearLayout>
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/containerQuietToggle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="16dp">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:id="@+id/containerSoundPickers"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:paddingHorizontal="16dp"
+                        android:paddingBottom="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/quiet_hours"
-                            android:textSize="18sp"
-                            android:textColor="?android:textColor"/>
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/txtShortToneLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/short_tone"
+                                    android:textColor="?android:textColor"/>
+
+                                <TextView
+                                    android:id="@+id/txtShortToneName"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/default_tone"
+                                    android:textSize="12sp"
+                                    android:textColor="?android:textColorSecondary"/>
+                            </LinearLayout>
+
+                            <Button
+                                android:id="@+id/btnTrimShort"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/trim_sound"
+                                android:visibility="gone"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"/>
+
+                            <Button
+                                android:id="@+id/btnPickShort"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/choose_sound"
+                                app:cornerRadius="50dp"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+                            <ImageView
+                                android:id="@+id/btnClearShort"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                                android:visibility="gone"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:contentDescription="@string/clear_sound_selection"
+                                android:layout_marginStart="16dp"
+                                app:tint="?android:textColorSecondary" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/rowLongTone"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/quiet_hours_description"
-                            android:textSize="14sp"
-                            android:textColor="?android:textColorSecondary"/>
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/long_tone"
+                                    android:textColor="?android:textColor"/>
+
+                                <TextView
+                                    android:id="@+id/txtLongToneName"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/default_tone"
+                                    android:textSize="12sp"
+                                    android:textColor="?android:textColorSecondary"/>
+                            </LinearLayout>
+
+                            <Button
+                                android:id="@+id/btnTrimLong"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/trim_sound"
+                                android:visibility="gone"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"/>
+
+                            <Button
+                                android:id="@+id/btnPickLong"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/choose_sound"
+                                app:cornerRadius="50dp"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+                            <ImageView
+                                android:id="@+id/btnClearLong"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                                android:visibility="gone"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:contentDescription="@string/clear_sound_selection"
+                                android:layout_marginStart="16dp"
+                                app:tint="?android:textColorSecondary" />
+                        </LinearLayout>
+
+                    </LinearLayout>
                     </LinearLayout>
 
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switchQuietHours"
-                        android:layout_width="wrap_content"
-                        android:contentDescription="@string/quiet_hours_description"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
+                    <!-- Custom timing + its slider grouped so no divider splits them -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
 
-                <LinearLayout
-                    android:id="@+id/containerQuietPickers"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="gone"
-                    android:paddingHorizontal="16dp"
-                    android:paddingBottom="16dp">
-
+                    <!-- Custom timing (#6) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:padding="16dp">
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -310,25 +345,88 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/quiet_start"
+                                android:text="@string/chime_timing"
+                                android:textSize="18sp"
                                 android:textColor="?android:textColor"/>
 
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/chime_timing_description"
+                                android:textSize="14sp"
+                                android:textColor="?android:textColorSecondary"/>
                         </LinearLayout>
 
-                        <Button
-                            android:id="@+id/btnQuietStart"
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchTiming"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="10:00 PM"
-                            app:cornerRadius="50dp"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                            android:contentDescription="@string/chime_timing" />
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:id="@+id/containerTiming"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:paddingHorizontal="16dp"
+                        android:paddingBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/tone_gap_label"
+                                android:textColor="?android:textColor"/>
+
+                            <TextView
+                                android:id="@+id/txtGapValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textStyle="bold"
+                                android:textColor="?android:textColor"/>
+
+                            <Button
+                                android:id="@+id/btnGapReset"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:minWidth="0dp"
+                                android:text="@string/reset"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"/>
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/sliderGap"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="2000"
+                            android:stepSize="25" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/tone_gap_warning"
+                            android:textSize="12sp"
+                            android:textColor="#FF6E40"/>
+                    </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Vibrate (#11) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:gravity="center_vertical"
+                        android:padding="16dp">
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -339,18 +437,172 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/quiet_end"
+                                android:text="@string/vibrate"
+                                android:textSize="18sp"
                                 android:textColor="?android:textColor"/>
 
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/vibrate_description"
+                                android:textSize="14sp"
+                                android:textColor="?android:textColorSecondary"/>
                         </LinearLayout>
 
-                        <Button
-                            android:id="@+id/btnQuietEnd"
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchVibrate"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="7:00 AM"
-                            app:cornerRadius="50dp"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                            android:contentDescription="@string/vibrate" />
+                    </LinearLayout>
+
+                    <!-- Quiet Hours + its pickers grouped so no divider splits them -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/containerQuietToggle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/quiet_hours"
+                                android:textSize="18sp"
+                                android:textColor="?android:textColor"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/quiet_hours_description"
+                                android:textSize="14sp"
+                                android:textColor="?android:textColorSecondary"/>
+                        </LinearLayout>
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchQuietHours"
+                            android:layout_width="wrap_content"
+                            android:contentDescription="@string/quiet_hours_description"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/containerQuietPickers"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:paddingHorizontal="16dp"
+                        android:paddingBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/quiet_start"
+                                    android:textColor="?android:textColor"/>
+
+                            </LinearLayout>
+
+                            <Button
+                                android:id="@+id/btnQuietStart"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="10:00 PM"
+                                app:cornerRadius="50dp"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/quiet_end"
+                                    android:textColor="?android:textColor"/>
+
+                            </LinearLayout>
+
+                            <Button
+                                android:id="@+id/btnQuietEnd"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="7:00 AM"
+                                app:cornerRadius="50dp"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                        </LinearLayout>
+
+                    </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Disable persistent notification (#7) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/minimize_notification"
+                                android:textSize="18sp"
+                                android:textColor="?android:textColor"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/minimize_notification_description"
+                                android:textSize="14sp"
+                                android:textColor="?android:textColorSecondary"/>
+                        </LinearLayout>
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchHideNextChime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/minimize_notification" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -398,14 +650,6 @@
                     android:textColor="@android:color/white"
                     app:cornerRadius="50dp"
                     android:text="@string/force_chime_now" />
-
-                <Button
-                    android:id="@+id/btnTestVisual"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/test_visual_pulse"
-                    android:textColor="@android:color/white"
-                    app:cornerRadius="50dp"/>
 
             </LinearLayout>
 

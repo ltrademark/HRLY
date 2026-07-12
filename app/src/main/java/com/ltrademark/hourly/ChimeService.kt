@@ -1,3 +1,23 @@
+/*
+ * HRLY, a simple hourly chime app for Android.
+ * Copyright (C) 2025-2026 Ltrademark
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * The HRLY name, logo, and branding are not covered by this license.
+ * See TRADEMARK.md.
+ */
 package com.ltrademark.hourly
 
 import android.app.*
@@ -8,6 +28,9 @@ import android.media.MediaPlayer
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.Settings
 import android.view.Gravity
 import android.view.View
@@ -23,12 +46,31 @@ class ChimeService : Service() {
 
     companion object {
         const val ACTION_PLAY_CHIME = "com.ltrademark.hourly.ACTION_PLAY_CHIME"
-        const val ACTION_TEST_VISUAL = "com.ltrademark.hourly.ACTION_TEST_VISUAL"
         const val ACTION_SKIP_NEXT = "com.ltrademark.hourly.ACTION_SKIP_NEXT"
         const val ACTION_STOP_SERVICE = "com.ltrademark.hourly.ACTION_STOP_SERVICE"
         const val ACTION_TOGGLE_SUSPEND = "com.ltrademark.hourly.ACTION_TOGGLE_SUSPEND"
 
         const val EXTRA_TEST_HOUR = "com.ltrademark.hourly.EXTRA_TEST_HOUR"
+
+        // Safe bounds for the user-configurable gap between tones (#6).
+        const val MIN_TONE_GAP_MS = 0
+        const val MAX_TONE_GAP_MS = 2000
+        const val DEFAULT_TONE_GAP_MS = 150
+
+        // Trim-length safeguards (#6 crop) that keep custom tones true to the
+        // count-the-hour methodology: a short tone ("1") must stay clearly shorter
+        // than a long tone ("5") or the hourly count can't be followed by ear.
+        // MIN_CROP_MS is a HARD floor (can't be saved below it, too short to hear);
+        // the recommended lengths + bands drive non-blocking warnings in the UI.
+        const val MIN_CROP_MS = 150
+        const val REC_SHORT_MS = 500          // default short-tone length ("1")
+        const val REC_LONG_MS = 1500          // default long-tone length ("5")
+        const val SHORT_BAND_MIN_MS = 300
+        const val SHORT_BAND_MAX_MS = 800
+        const val LONG_BAND_MIN_MS = 1000
+        const val LONG_BAND_MAX_MS = 2500
+        // Long must beat short by at least this much to stay distinguishable.
+        const val DISTINCT_MARGIN_MS = 300
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
@@ -78,11 +120,6 @@ class ChimeService : Service() {
                     scheduleNextChime()
                 }
             }
-            ACTION_TEST_VISUAL -> {
-                serviceScope.launch(Dispatchers.Main) {
-                    showVisualPulse(3000L, forceShow = true)
-                }
-            }
             ACTION_SKIP_NEXT -> {
                 skipNextChime()
             }
@@ -117,6 +154,12 @@ class ChimeService : Service() {
         val customPath = if (customKey != null) prefs.getString(customKey, null) else null
         val customFile = customPath?.let { File(it) }?.takeIf { it.exists() }
 
+        // Optional per-tone crop (#6): play only [start, end] of the custom file.
+        // Only applies to a real custom tone with a valid, non-empty range.
+        val cropStart = if (customKey != null) prefs.getInt("crop_${type}_start", 0) else 0
+        val cropEnd = if (customKey != null) prefs.getInt("crop_${type}_end", 0) else 0
+        val hasCrop = customFile != null && cropEnd > cropStart
+
         try {
             if (customFile != null) {
                 mediaPlayer.setDataSource(customFile.absolutePath)
@@ -133,16 +176,30 @@ class ChimeService : Service() {
             mediaPlayer.setAudioAttributes(attributes)
 
             mediaPlayer.prepare()
-            showVisualPulse(duration)
+
+            // Vibrate alongside the sound (#11) so vibrate-only users still get the cue.
+            // DND/quiet are already enforced upstream in onStartCommand, so this inherits them.
+            if (prefs.getBoolean("vibrate_enabled", false)) vibrate()
+
+            val playFor = if (hasCrop) {
+                // Sample-accurate seek so the crop start lands where the user set it
+                // (the default seek snaps to the nearest keyframe).
+                mediaPlayer.seekTo(cropStart.toLong(), MediaPlayer.SEEK_CLOSEST)
+                (cropEnd - cropStart).toLong()
+            } else {
+                duration
+            }
+
+            showVisualPulse(playFor)
             mediaPlayer.start()
-            delay(duration)
+            delay(playFor)
             mediaPlayer.release()
 
         } catch (e: Exception) {
             e.printStackTrace()
             mediaPlayer.release()
             if (customFile != null) {
-                // A real custom tone failed to play — tell the user instead of
+                // A real custom tone failed to play, so tell the user instead of
                 // silently substituting the default, then fall back so the hour is
                 // still audibly marked.
                 notifyPlaybackError()
@@ -154,11 +211,21 @@ class ChimeService : Service() {
     private fun notifyPlaybackError() {
         val notification = NotificationCompat.Builder(this, "chime_channel")
             .setContentTitle("HRLY")
-            .setContentText("Couldn't play the custom tone — using the default instead.")
+            .setContentText("Couldn't play the custom tone. Using the default instead.")
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
         getSystemService(NotificationManager::class.java).notify(998, notification)
+    }
+
+    private fun vibrate() {
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(VIBRATOR_SERVICE) as Vibrator
+        }
+        vibrator.vibrate(VibrationEffect.createOneShot(400, VibrationEffect.DEFAULT_AMPLITUDE))
     }
 
     override fun onCreate() {
@@ -230,7 +297,9 @@ class ChimeService : Service() {
             val suspendPending = PendingIntent.getService(this, 3, suspendIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
             builder.setContentTitle(getString(R.string.status_active))
-            builder.setContentText("Next chime at ${getNextChimeTime()}")
+            if (!prefs.getBoolean("hide_next_chime", false)) {
+                builder.setContentText("Next chime at ${getNextChimeTime()}")
+            }
             builder.addAction(android.R.drawable.ic_media_pause, getString(R.string.action_suspend), suspendPending)
             builder.addAction(android.R.drawable.ic_media_next, "Skip Next Chime", skipPending)
         }
@@ -273,19 +342,21 @@ class ChimeService : Service() {
         scheduleExactAlarm(calendar.timeInMillis, pendingIntent)
 
         val channelId = "chime_channel"
-        val notification = NotificationCompat.Builder(this, channelId)
+        val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+        val builder = NotificationCompat.Builder(this, channelId)
             .setContentTitle("HRLY Active")
-            .setContentText("Next chime at ${getNextChimeTime(2)}")
             .setSmallIcon(R.drawable.ic_stat_chime)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .addAction(android.R.drawable.ic_media_next, "Skip Next",
                 PendingIntent.getService(this, 1, Intent(this, ChimeService::class.java).apply { action = ACTION_SKIP_NEXT }, PendingIntent.FLAG_IMMUTABLE))
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Disable",
                 PendingIntent.getService(this, 2, Intent(this, ChimeService::class.java).apply { action = ACTION_STOP_SERVICE }, PendingIntent.FLAG_IMMUTABLE))
-            .build()
+        if (!prefs.getBoolean("hide_next_chime", false)) {
+            builder.setContentText("Next chime at ${getNextChimeTime(2)}")
+        }
 
         val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.notify(1, notification)
+        notificationManager.notify(1, builder.build())
     }
 
     private fun isDndActive(): Boolean {
@@ -321,17 +392,35 @@ class ChimeService : Service() {
 
     private fun playSequenceForHour(hour24: Int) {
         serviceScope.launch {
+            val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+
+            // Single chime mode (#3 / #8): one tone per hour, identical every hour,
+            // instead of counting the hour with long/short tones.
+            if (prefs.getBoolean("simple_chime_enabled", false)) {
+                playTone(R.raw.tone_short, shortToneDuration, "short")
+                return@launch
+            }
+
+            // Gap between tones (#6). Opt-in: unchanged 15 ms spacing unless the user
+            // enables custom timing, then the clamped user value applies.
+            val gap = if (prefs.getBoolean("timing_enabled", false)) {
+                prefs.getInt("tone_gap_ms", DEFAULT_TONE_GAP_MS)
+                    .coerceIn(MIN_TONE_GAP_MS, MAX_TONE_GAP_MS).toLong()
+            } else {
+                15L
+            }
+
             val hour12 = if (hour24 % 12 == 0) 12 else hour24 % 12
             val longTones = hour12 / 5
             val shortTones = hour12 % 5
 
             repeat(longTones) {
                 playTone(R.raw.tone_long, longToneDuration, "long")
-                delay(15)
+                delay(gap)
             }
             repeat(shortTones) {
                 playTone(R.raw.tone_short, shortToneDuration, "short")
-                delay(15)
+                delay(gap)
             }
         }
     }
@@ -474,8 +563,8 @@ class ChimeService : Service() {
      * Uses setAlarmClock() instead of setExactAndAllowWhileIdle(): the latter is still
      * deferrable by Doze / OEM alarm-batching, which made chimes fire minutes late (#10).
      * setAlarmClock is exempt from those delays. It also does NOT require the
-     * SCHEDULE_EXACT_ALARM permission, so we no longer call canScheduleExactAlarms() —
-     * that API only exists on API 31+ and crashed on Android 8-11 (#1).
+     * SCHEDULE_EXACT_ALARM permission, so we no longer call canScheduleExactAlarms().
+     * That API only exists on API 31+ and crashed on Android 8-11 (#1).
      *
      * Trade-off: setAlarmClock surfaces a standing alarm indicator in the status bar.
      */
