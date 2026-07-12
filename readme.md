@@ -48,5 +48,6 @@ These tones compound to announce the current hour. For example, 7:00 will be ann
 
 <div align="center">
   <p>2025 &copy; Ltrademark&reg;. All Rights Reserved.</p>
-  <p>Distributed under the MIT License. See <a href="./LICENSE">LICENSE</a> for more information.</p>
+  <p>Code licensed under the GNU General Public License v3. See <a href="./LICENSE">LICENSE</a> for details.</p>
+  <p>The HRLY name, logo, and branding are not covered by that license. See <a href="./TRADEMARK.md">TRADEMARK.md</a>.</p>
 </div>
