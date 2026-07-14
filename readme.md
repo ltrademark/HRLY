@@ -32,8 +32,7 @@ These tones compound to announce the current hour. For example, 7:00 will be ann
 *   **Customizable Sounds:** Use your own audio files for both the short and long tones.
 *   **Notification Controls:** Skip the next chime or stop the service directly from the notification.
 *   **Background Service:** Runs efficiently in the background to chime on the hour.
-*   **Optional Visual Pulse:** An optional visual pulse can accompany the chime on the lock screen. (Still working out some kinks)
-*   **User Control:** Easily enable or disable the main chime service, visuals, and custom sounds.
+*   **User Control:** Easily enable or disable the main chime service and custom sounds.
 *   **Minimalist Design:** A clean, no-frills interface.
 *   **Open Source:** A "View Source" button provides a quick link to the project's GitHub page.
 
@@ -47,7 +46,7 @@ These tones compound to announce the current hour. For example, 7:00 will be ann
 ---
 
 <div align="center">
-  <p>2025 &copy; Ltrademark&reg;. All Rights Reserved.</p>
+  <p>2025-2026 &copy; Ltrademark&reg;.</p>
   <p>Code licensed under the GNU General Public License v3. See <a href="./LICENSE">LICENSE</a> for details.</p>
   <p>The HRLY name, logo, and branding are not covered by that license. See <a href="./TRADEMARK.md">TRADEMARK.md</a>.</p>
 </div>
