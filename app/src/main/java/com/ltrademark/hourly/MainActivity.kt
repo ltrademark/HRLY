@@ -767,6 +767,13 @@ class MainActivity : AppCompatActivity() {
             }
             startForegroundService(intent)
         }
+
+        findViewById<Button>(R.id.btnTestVibrate).setOnClickListener {
+            val intent = Intent(this, ChimeService::class.java).apply {
+                action = ChimeService.ACTION_TEST_VIBRATE
+            }
+            startForegroundService(intent)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: android.view.Menu?): Boolean {

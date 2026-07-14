@@ -43,8 +43,17 @@ class ChimeService : Service() {
         const val ACTION_SKIP_NEXT = "com.ltrademark.hourly.ACTION_SKIP_NEXT"
         const val ACTION_STOP_SERVICE = "com.ltrademark.hourly.ACTION_STOP_SERVICE"
         const val ACTION_TOGGLE_SUSPEND = "com.ltrademark.hourly.ACTION_TOGGLE_SUSPEND"
+        const val ACTION_TEST_VIBRATE = "com.ltrademark.hourly.ACTION_TEST_VIBRATE"
 
         const val EXTRA_TEST_HOUR = "com.ltrademark.hourly.EXTRA_TEST_HOUR"
+
+        // Two channels back the ongoing notification: a normal, visible one and a
+        // minimized one (no status-bar icon, collapsed in the shade). Which one is
+        // used follows the "Minimize notification" toggle. Distinct IDs from the
+        // pre-1.7 "chime_channel" so the new importances actually take effect
+        // (channel importance is fixed once created).
+        const val CHANNEL_VISIBLE = "chime_channel_visible"
+        const val CHANNEL_MINIMIZED = "chime_channel_min"
 
         // Safe bounds for the user-configurable gap between tones (#6).
         const val MIN_TONE_GAP_MS = 0
@@ -115,6 +124,15 @@ class ChimeService : Service() {
             }
             ACTION_SKIP_NEXT -> {
                 skipNextChime()
+            }
+            ACTION_TEST_VIBRATE -> {
+                // Debug: buzz short then long so the matched-duration feel is
+                // obvious back to back (#11).
+                serviceScope.launch {
+                    vibrate(shortToneDuration)
+                    delay(shortToneDuration + 250)
+                    vibrate(longToneDuration)
+                }
             }
             ACTION_STOP_SERVICE -> {
                 stopChimeService()
@@ -232,7 +250,7 @@ class ChimeService : Service() {
     }
 
     private fun notifyPlaybackError() {
-        val notification = NotificationCompat.Builder(this, "chime_channel")
+        val notification = NotificationCompat.Builder(this, CHANNEL_VISIBLE)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(getString(R.string.custom_tone_error))
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
@@ -276,17 +294,36 @@ class ChimeService : Service() {
         return "$hour12:00 $amPm"
     }
 
+    /**
+     * Creates both notification channels (idempotent) and drops the pre-1.7
+     * single channel. The minimized channel is IMPORTANCE_MIN (no status-bar
+     * icon, collapsed); the visible one is IMPORTANCE_LOW (shown, still silent,
+     * an ongoing service notification should never make noise).
+     */
+    private fun ensureChannels() {
+        val nm = getSystemService(NotificationManager::class.java)
+        nm.deleteNotificationChannel("chime_channel")
+        nm.createNotificationChannel(
+            NotificationChannel(CHANNEL_VISIBLE, "Hourly Chime Service", NotificationManager.IMPORTANCE_LOW).apply {
+                description = "Ongoing notification for the hourly chime service"
+                setShowBadge(false)
+            }
+        )
+        nm.createNotificationChannel(
+            NotificationChannel(CHANNEL_MINIMIZED, "Hourly Chime Service (minimized)", NotificationManager.IMPORTANCE_MIN).apply {
+                description = "Minimized ongoing notification for the hourly chime service"
+                setShowBadge(false)
+            }
+        )
+    }
+
     private fun createNotification(): Notification {
         val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
         val isSuspended = prefs.getBoolean("is_suspended", false)
+        val minimize = prefs.getBoolean("hide_next_chime", false)
 
-        val channelId = "chime_channel"
-        val importance = NotificationManager.IMPORTANCE_MIN
-        val channel = NotificationChannel(channelId, "Hourly Chime Service", importance).apply {
-            description = "Background service for hourly chimes"
-            setShowBadge(false)
-        }
-        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        ensureChannels()
+        val channelId = if (minimize) CHANNEL_MINIMIZED else CHANNEL_VISIBLE
 
         val stopIntent = Intent(this, ChimeService::class.java).apply { action = ACTION_STOP_SERVICE }
         val stopPendingIntent = PendingIntent.getService(
@@ -300,7 +337,7 @@ class ChimeService : Service() {
 
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_stat_chime)
-            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setPriority(if (minimize) NotificationCompat.PRIORITY_MIN else NotificationCompat.PRIORITY_LOW)
             .setCategory(Notification.CATEGORY_SERVICE)
             .setContentIntent(mainPendingIntent)
             .setOngoing(true)
@@ -321,7 +358,7 @@ class ChimeService : Service() {
             val suspendPending = PendingIntent.getService(this, 3, suspendIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
             builder.setContentTitle(getString(R.string.status_active))
-            if (!prefs.getBoolean("hide_next_chime", false)) {
+            if (!minimize) {
                 builder.setContentText(getString(R.string.notif_next_chime_at, getNextChimeTime()))
             }
             builder.addAction(android.R.drawable.ic_media_pause, getString(R.string.action_suspend), suspendPending)
@@ -365,17 +402,19 @@ class ChimeService : Service() {
 
         scheduleExactAlarm(calendar.timeInMillis, pendingIntent)
 
-        val channelId = "chime_channel"
         val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+        val minimize = prefs.getBoolean("hide_next_chime", false)
+        ensureChannels()
+        val channelId = if (minimize) CHANNEL_MINIMIZED else CHANNEL_VISIBLE
         val builder = NotificationCompat.Builder(this, channelId)
             .setContentTitle(getString(R.string.status_active))
             .setSmallIcon(R.drawable.ic_stat_chime)
-            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setPriority(if (minimize) NotificationCompat.PRIORITY_MIN else NotificationCompat.PRIORITY_LOW)
             .addAction(android.R.drawable.ic_media_next, getString(R.string.action_skip_next),
                 PendingIntent.getService(this, 1, Intent(this, ChimeService::class.java).apply { action = ACTION_SKIP_NEXT }, PendingIntent.FLAG_IMMUTABLE))
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.action_disable),
                 PendingIntent.getService(this, 2, Intent(this, ChimeService::class.java).apply { action = ACTION_STOP_SERVICE }, PendingIntent.FLAG_IMMUTABLE))
-        if (!prefs.getBoolean("hide_next_chime", false)) {
+        if (!minimize) {
             builder.setContentText(getString(R.string.notif_next_chime_at, getNextChimeTime(2)))
         }
 
