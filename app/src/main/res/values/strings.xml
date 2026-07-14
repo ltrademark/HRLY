@@ -3,8 +3,6 @@
     <string name="title_main">HRLY Settings</string>
     <string name="enable_hourly_chime">Enable Hourly Chime</string>
     <string name="enable_hourly_chime_description">Play a tone every hour</string>
-    <string name="enable_passive_aod">Enable Passive AOD (Beta)</string>
-    <string name="enable_passive_aod_description">Display visual when tone notification runs. This feature is still experimental and may not work.</string>
     <string name="debug_menu">DEBUG MENU</string>
     <string name="test_8_logic">Test 8:00 Logic</string>
     <string name="test_12_logic">Test 12:00 Logic</string>
@@ -35,9 +33,14 @@
     <string name="single_chime">Single chime</string>
     <string name="single_chime_description">Play one tone each hour instead of counting the hour</string>
 
-    <!-- Vibration (#11) -->
-    <string name="vibrate">Vibrate</string>
-    <string name="vibrate_description">Also vibrate when chiming (Do Not Disturb is still respected)</string>
+    <!-- Chime mode (#11) -->
+    <string name="chime_mode">Chime mode</string>
+    <string name="chime_mode_description">Choose how each hourly chime plays</string>
+    <string name="mode_sound">Sound</string>
+    <string name="mode_vibrate">Vibrate</string>
+    <string name="mode_both">Both</string>
+    <string name="override_silent">Play sound in silent/vibrate mode</string>
+    <string name="override_silent_description">Chime aloud even when the ringer is silent or on vibrate. Do Not Disturb is still respected.</string>
 
     <!-- Minimize notification (#7) -->
     <string name="minimize_notification">Minimize notification</string>
@@ -45,7 +48,7 @@
 
     <!-- Chime timing / crop (#6) -->
     <string name="chime_timing">Custom timing</string>
-    <string name="chime_timing_description">Adjust the gap between tones and trim custom sounds</string>
+    <string name="chime_timing_description">Adjust the gap between tones</string>
     <string name="tone_gap_label">Gap between tones</string>
     <string name="tone_gap_value">%1$d ms</string>
     <string name="reset">Reset</string>
@@ -70,8 +73,12 @@
     <!-- Notification Shade Actions -->
     <string name="action_suspend">Pause</string>
     <string name="action_resume">Resume</string>
+    <string name="action_skip_next">Skip Next Chime</string>
+    <string name="action_disable">Disable</string>
     <string name="status_suspended">HRLY Suspended</string>
-    <string name="status_suspended_description">Chimes are pause until you resume the service.</string>
+    <string name="status_suspended_description">Chimes are paused until you resume the service.</string>
     <string name="status_active">HRLY Active</string>
+    <string name="notif_next_chime_at">Next chime at %1$s</string>
+    <string name="custom_tone_error">Couldn\'t play the custom tone. Using the default instead.</string>
 
 </resources>

@@ -22,20 +22,14 @@ package com.ltrademark.hourly
 
 import android.app.*
 import android.content.Intent
-import android.graphics.PixelFormat
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.IBinder
-import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.provider.Settings
-import android.view.Gravity
-import android.view.View
-import android.view.WindowManager
-import android.widget.ImageView
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import kotlinx.coroutines.*
@@ -71,11 +65,14 @@ class ChimeService : Service() {
         const val LONG_BAND_MAX_MS = 2500
         // Long must beat short by at least this much to stay distinguishable.
         const val DISTINCT_MARGIN_MS = 300
+
+        // Vibration length is matched to the tone length (#11) but clamped so a
+        // buzz is always long enough to feel and never runs uncomfortably long.
+        const val MIN_VIBRATION_MS = 150L
+        const val MAX_VIBRATION_MS = 1500L
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
-    private var windowManager: WindowManager? = null
-    private var overlayView: View? = null
 
     // Configuration
     private val longToneDuration = 1500L
@@ -115,10 +112,6 @@ class ChimeService : Service() {
                 }
 
                 playSequenceForHour(hourToPlay)
-
-                if (testHour == -1) {
-                    scheduleNextChime()
-                }
             }
             ACTION_SKIP_NEXT -> {
                 skipNextChime()
@@ -135,8 +128,25 @@ class ChimeService : Service() {
     }
 
     private suspend fun playTone(defaultResId: Int, duration: Long, type: String) {
-        val mediaPlayer = MediaPlayer()
         val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+
+        // Chime mode (#11): sound, vibrate, or both. Falls back to the legacy
+        // vibrate_enabled pref for users updating from before the mode selector.
+        val mode = prefs.getString("chime_mode", null)
+            ?: if (prefs.getBoolean("vibrate_enabled", false)) "both" else "sound"
+        val wantSound = mode == "sound" || mode == "both"
+        val wantVibrate = mode == "vibrate" || mode == "both"
+        val overrideSilent = prefs.getBoolean("override_silent", false)
+
+        // Vibrate-only mode: no audio, just buzz for the tone's length so the
+        // hourly count still comes through, then hold for the sequence spacing.
+        if (!wantSound) {
+            if (wantVibrate) vibrate(duration)
+            delay(duration)
+            return
+        }
+
+        val mediaPlayer = MediaPlayer()
 
         val isCustomEnabled = prefs.getBoolean("custom_sounds_enabled", false)
 
@@ -169,17 +179,22 @@ class ChimeService : Service() {
                 afd.close()
             }
 
+            // #11: only when the user opts in do we use the alarm usage, which
+            // plays through the phone's silent/vibrate ringer mode. Otherwise the
+            // notification usage keeps the old behavior (respects the ringer). DND
+            // and quiet hours are gated upstream in onStartCommand either way.
+            val usage = if (overrideSilent) {
+                AudioAttributes.USAGE_ALARM
+            } else {
+                AudioAttributes.USAGE_NOTIFICATION
+            }
             val attributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setUsage(usage)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
             mediaPlayer.setAudioAttributes(attributes)
 
             mediaPlayer.prepare()
-
-            // Vibrate alongside the sound (#11) so vibrate-only users still get the cue.
-            // DND/quiet are already enforced upstream in onStartCommand, so this inherits them.
-            if (prefs.getBoolean("vibrate_enabled", false)) vibrate()
 
             val playFor = if (hasCrop) {
                 // Sample-accurate seek so the crop start lands where the user set it
@@ -190,7 +205,15 @@ class ChimeService : Service() {
                 duration
             }
 
-            showVisualPulse(playFor)
+            // Vibrate alongside the sound when the mode asks for it, matched to the
+            // tone length so long and short are distinguishable by feel (#11).
+            // Guard: if sound was chosen but the ringer is silent/vibrate and the
+            // user did not opt in to override it, the tone is inaudible, so buzz
+            // once anyway rather than let the hour pass with no cue at all.
+            if (wantVibrate || (!overrideSilent && isRingerSilent())) {
+                vibrate(playFor)
+            }
+
             mediaPlayer.start()
             delay(playFor)
             mediaPlayer.release()
@@ -210,27 +233,33 @@ class ChimeService : Service() {
 
     private fun notifyPlaybackError() {
         val notification = NotificationCompat.Builder(this, "chime_channel")
-            .setContentTitle("HRLY")
-            .setContentText("Couldn't play the custom tone. Using the default instead.")
+            .setContentTitle(getString(R.string.app_name))
+            .setContentText(getString(R.string.custom_tone_error))
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
         getSystemService(NotificationManager::class.java).notify(998, notification)
     }
 
-    private fun vibrate() {
+    /** True when the phone is on vibrate or silent (not the normal ringer mode). */
+    private fun isRingerSilent(): Boolean {
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        return audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL
+    }
+
+    private fun vibrate(durationMs: Long) {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
         } else {
             @Suppress("DEPRECATION")
             getSystemService(VIBRATOR_SERVICE) as Vibrator
         }
-        vibrator.vibrate(VibrationEffect.createOneShot(400, VibrationEffect.DEFAULT_AMPLITUDE))
+        val clamped = durationMs.coerceIn(MIN_VIBRATION_MS, MAX_VIBRATION_MS)
+        vibrator.vibrate(VibrationEffect.createOneShot(clamped, VibrationEffect.DEFAULT_AMPLITUDE))
     }
 
     override fun onCreate() {
         super.onCreate()
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         startForeground(1, createNotification())
         scheduleNextChime()
     }
@@ -258,11 +287,6 @@ class ChimeService : Service() {
             setShowBadge(false)
         }
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-
-        val skipIntent = Intent(this, ChimeService::class.java).apply { action = ACTION_SKIP_NEXT }
-        val skipPendingIntent = PendingIntent.getService(
-            this, 1, skipIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
 
         val stopIntent = Intent(this, ChimeService::class.java).apply { action = ACTION_STOP_SERVICE }
         val stopPendingIntent = PendingIntent.getService(
@@ -298,13 +322,13 @@ class ChimeService : Service() {
 
             builder.setContentTitle(getString(R.string.status_active))
             if (!prefs.getBoolean("hide_next_chime", false)) {
-                builder.setContentText("Next chime at ${getNextChimeTime()}")
+                builder.setContentText(getString(R.string.notif_next_chime_at, getNextChimeTime()))
             }
             builder.addAction(android.R.drawable.ic_media_pause, getString(R.string.action_suspend), suspendPending)
-            builder.addAction(android.R.drawable.ic_media_next, "Skip Next Chime", skipPending)
+            builder.addAction(android.R.drawable.ic_media_next, getString(R.string.action_skip_next), skipPending)
         }
 
-        builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Disable", stopPendingIntent)
+        builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.action_disable), stopPendingIntent)
 
         return builder.build()
     }
@@ -344,15 +368,15 @@ class ChimeService : Service() {
         val channelId = "chime_channel"
         val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
         val builder = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("HRLY Active")
+            .setContentTitle(getString(R.string.status_active))
             .setSmallIcon(R.drawable.ic_stat_chime)
             .setPriority(NotificationCompat.PRIORITY_MIN)
-            .addAction(android.R.drawable.ic_media_next, "Skip Next",
+            .addAction(android.R.drawable.ic_media_next, getString(R.string.action_skip_next),
                 PendingIntent.getService(this, 1, Intent(this, ChimeService::class.java).apply { action = ACTION_SKIP_NEXT }, PendingIntent.FLAG_IMMUTABLE))
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Disable",
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.action_disable),
                 PendingIntent.getService(this, 2, Intent(this, ChimeService::class.java).apply { action = ACTION_STOP_SERVICE }, PendingIntent.FLAG_IMMUTABLE))
         if (!prefs.getBoolean("hide_next_chime", false)) {
-            builder.setContentText("Next chime at ${getNextChimeTime(2)}")
+            builder.setContentText(getString(R.string.notif_next_chime_at, getNextChimeTime(2)))
         }
 
         val notificationManager = getSystemService(NotificationManager::class.java)
@@ -425,122 +449,6 @@ class ChimeService : Service() {
         }
     }
 
-    private fun showVisualPulse(duration: Long, forceShow: Boolean = false) {
-        val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
-        if (!prefs.getBoolean("visual_enabled", false)) return
-        if (!Settings.canDrawOverlays(this)) return
-
-        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
-        val isScreenOn = powerManager.isInteractive
-
-        if (isScreenOn && !forceShow) return
-
-        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-
-        // 1. Calculate REAL Screen Size (Modern vs Legacy)
-        val screenWidth: Int
-        val screenHeight: Int
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // New Way (Android 11+)
-            val metrics = windowManager.currentWindowMetrics
-            val bounds = metrics.bounds
-            screenWidth = bounds.width()
-            screenHeight = bounds.height()
-        } else {
-            // Old Way (Android 10 and below)
-            val displayMetrics = android.util.DisplayMetrics()
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.getRealMetrics(displayMetrics)
-            screenWidth = displayMetrics.widthPixels
-            screenHeight = displayMetrics.heightPixels
-        }
-
-        // 2. Window Params
-        @Suppress("DEPRECATION")
-        val layoutFlag = (
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-                )
-
-        val params = WindowManager.LayoutParams(
-            screenWidth,
-            screenHeight + 200, // Extra height buffer for nav bars
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            layoutFlag,
-            PixelFormat.TRANSLUCENT
-        )
-
-        // 3. Container with Immersive Flags
-        val container = android.widget.FrameLayout(this)
-        container.setBackgroundColor(android.graphics.Color.BLACK)
-        container.alpha = 0f
-
-        // Hide System Bars (Status/Nav)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            container.windowInsetsController?.hide(android.view.WindowInsets.Type.systemBars())
-        } else {
-            @Suppress("DEPRECATION")
-            container.systemUiVisibility = (
-                    View.SYSTEM_UI_FLAG_LOW_PROFILE or
-                            View.SYSTEM_UI_FLAG_FULLSCREEN or
-                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    )
-        }
-
-        // 4. Image Setup
-        val sizeInDp = 85
-        val scale = resources.displayMetrics.density
-        val sizeInPx = (sizeInDp * scale + 0.5f).toInt()
-
-        val imageView = ImageView(this)
-        imageView.setImageResource(R.drawable.sphere_glow)
-        val imageParams = android.widget.FrameLayout.LayoutParams(sizeInPx, sizeInPx).apply {
-            gravity = Gravity.CENTER
-        }
-        container.addView(imageView, imageParams)
-
-        // 5. Add to Window
-        try {
-            windowManager.addView(container, params)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return
-        }
-
-        // 6. Animation
-        val fadeInTime = 500L
-        val holdTime = duration - (fadeInTime * 2)
-
-        container.animate()
-            .alpha(1f)
-            .setDuration(fadeInTime)
-            .withEndAction {
-                imageView.animate().scaleX(1.1f).scaleY(1.1f).setDuration(holdTime).start()
-
-                container.animate()
-                    .alpha(0f)
-                    .setDuration(fadeInTime)
-                    .setStartDelay(holdTime)
-                    .withEndAction {
-                        try {
-                            windowManager.removeView(container)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                    .start()
-            }
-            .start()
-    }
-
     private fun scheduleNextChime() {
         val intent = Intent(this, ChimeReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
@@ -582,6 +490,5 @@ class ChimeService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         serviceScope.cancel()
-        if (overlayView != null) windowManager?.removeView(overlayView)
     }
 }

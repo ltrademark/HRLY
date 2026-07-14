@@ -54,7 +54,6 @@ class WaveformTrimView @JvmOverloads constructor(
     private val dimBar = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#4A4A4A") }
     private val scrim = Paint().apply { color = Color.parseColor("#88000000") }
     private val handlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ACCENT }
-    private val gripPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE }
     private val baseline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#4A4A4A"); strokeWidth = 1f * density
     }

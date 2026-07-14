@@ -22,7 +22,6 @@ package com.ltrademark.hourly
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlarmManager
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -49,6 +48,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
 import com.google.android.material.switchmaterial.SwitchMaterial
 import java.io.File
@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             if (uri != null) {
-                saveCustomTone(uri, "custom_tone_short", findViewById(R.id.txtShortToneName), findViewById(R.id.btnClearShort))
+                saveCustomTone(uri, "custom_tone_short", findViewById(R.id.txtShortToneName))
             }
         }
     }
@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             if (uri != null) {
-                saveCustomTone(uri, "custom_tone_long", findViewById(R.id.txtLongToneName), findViewById(R.id.btnClearLong))
+                saveCustomTone(uri, "custom_tone_long", findViewById(R.id.txtLongToneName))
             }
         }
     }
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity() {
         setupCustomSounds()
         setupQuietHours()
         setupSimpleMode()
-        setupVibration()
+        setupChimeMode()
         setupNotificationPref()
         setupTiming()
     }
@@ -122,18 +122,9 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val alarmManager = getSystemService(AlarmManager::class.java)
-            if (!alarmManager.canScheduleExactAlarms()) {
-                val intent = Intent(
-                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
-                    "package:$packageName".toUri()
-                )
-                startActivity(intent)
-                Toast.makeText(this, "Please allow 'Alarms & Reminders' for HRLY", Toast.LENGTH_LONG).show()
-            }
-        }
+        // No exact-alarm permission request: the service schedules via
+        // setAlarmClock(), which is exempt from SCHEDULE_EXACT_ALARM. Calling
+        // canScheduleExactAlarms() here also crashed on API < 31 (#1).
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -240,8 +231,8 @@ class MainActivity : AppCompatActivity() {
             updateVisualContainerState(containerSoundPickers, isChecked)
         }
 
-        restoreToneState("custom_tone_short", findViewById(R.id.txtShortToneName), findViewById(R.id.btnClearShort))
-        restoreToneState("custom_tone_long", findViewById(R.id.txtLongToneName), findViewById(R.id.btnClearLong))
+        restoreToneState("custom_tone_short", findViewById(R.id.txtShortToneName))
+        restoreToneState("custom_tone_long", findViewById(R.id.txtLongToneName))
 
         findViewById<Button>(R.id.btnPickShort).setOnClickListener {
             val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
@@ -264,17 +255,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<ImageView>(R.id.btnClearShort).setOnClickListener {
-            clearCustomTone("custom_tone_short", findViewById(R.id.txtShortToneName), it)
+            clearCustomTone("custom_tone_short", findViewById(R.id.txtShortToneName))
         }
         findViewById<ImageView>(R.id.btnClearLong).setOnClickListener {
-            clearCustomTone("custom_tone_long", findViewById(R.id.txtLongToneName), it)
+            clearCustomTone("custom_tone_long", findViewById(R.id.txtLongToneName))
         }
 
         findViewById<Button>(R.id.btnTrimShort).setOnClickListener { openCropDialog("short") }
         findViewById<Button>(R.id.btnTrimLong).setOnClickListener { openCropDialog("long") }
     }
 
-    private fun saveCustomTone(uri: Uri, key: String, textView: TextView, clearBtn: View) {
+    private fun saveCustomTone(uri: Uri, key: String, textView: TextView) {
         // Copy the picked audio into app-private storage while we still hold the
         // transient read grant from the picker. The background service later plays
         // this local copy, which avoids losing access to the content:// URI once the
@@ -324,7 +315,7 @@ class MainActivity : AppCompatActivity() {
             .setText(if (hasTone) R.string.change_sound else R.string.choose_sound)
     }
 
-    private fun restoreToneState(key: String, textView: TextView, clearBtn: View) {
+    private fun restoreToneState(key: String, textView: TextView) {
         val path = prefs.getString(key, null)
         if (path != null && java.io.File(path).exists()) {
             textView.text = prefs.getString("${key}_name", null) ?: getString(R.string.custom_audio)
@@ -337,7 +328,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun clearCustomTone(key: String, textView: TextView, clearBtn: View) {
+    private fun clearCustomTone(key: String, textView: TextView) {
         prefs.getString(key, null)?.let { path ->
             try { File(path).delete() } catch (_: Exception) {}
         }
@@ -443,11 +434,43 @@ class MainActivity : AppCompatActivity() {
             if (singleMode) View.GONE else View.VISIBLE
     }
 
-    private fun setupVibration() {
-        val sw = findViewById<SwitchMaterial>(R.id.switchVibrate)
-        sw.isChecked = prefs.getBoolean("vibrate_enabled", false)
-        sw.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit { putBoolean("vibrate_enabled", isChecked) }
+    private fun setupChimeMode() {
+        val toggle = findViewById<MaterialButtonToggleGroup>(R.id.toggleChimeMode)
+        val override = findViewById<SwitchMaterial>(R.id.switchOverrideSilent)
+
+        // Resolve the current mode, migrating the pre-1.7 vibrate_enabled pref.
+        val mode = prefs.getString("chime_mode", null)
+            ?: if (prefs.getBoolean("vibrate_enabled", false)) "both" else "sound"
+
+        toggle.check(
+            when (mode) {
+                "vibrate" -> R.id.btnModeVibrate
+                "both" -> R.id.btnModeBoth
+                else -> R.id.btnModeSound
+            }
+        )
+
+        // The override only affects sound, so it is meaningless in vibrate-only mode.
+        fun applyOverrideEnabled(currentMode: String) {
+            override.isEnabled = currentMode != "vibrate"
+        }
+
+        override.isChecked = prefs.getBoolean("override_silent", false)
+        applyOverrideEnabled(mode)
+
+        toggle.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            val newMode = when (checkedId) {
+                R.id.btnModeVibrate -> "vibrate"
+                R.id.btnModeBoth -> "both"
+                else -> "sound"
+            }
+            prefs.edit { putString("chime_mode", newMode) }
+            applyOverrideEnabled(newMode)
+        }
+
+        override.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit { putBoolean("override_silent", isChecked) }
         }
     }
 
@@ -632,13 +655,19 @@ class MainActivity : AppCompatActivity() {
                 previewPlayer?.release()
                 previewPlayer = MediaPlayer().apply {
                     setDataSource(file.absolutePath)
-                    // Play on the same stream the chime actually uses (notification /
-                    // sonification), not the default media stream. Otherwise the preview
-                    // is silent for anyone whose media volume is down even though the
-                    // real chime is audible.
+                    // Play on the same stream the chime actually uses so the preview
+                    // matches reality: the alarm usage when the user opted to play
+                    // through silent/vibrate (#11), otherwise the notification usage.
+                    // Either way not the media stream, which would be silent for
+                    // anyone with media volume down even though the chime is audible.
+                    val usage = if (prefs.getBoolean("override_silent", false)) {
+                        AudioAttributes.USAGE_ALARM
+                    } else {
+                        AudioAttributes.USAGE_NOTIFICATION
+                    }
                     setAudioAttributes(
                         AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                            .setUsage(usage)
                             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                             .build()
                     )
@@ -766,7 +795,7 @@ class MainActivity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
         val txtVersion = dialogView.findViewById<TextView>(R.id.txtVersion)
-        txtVersion.text = "Version ${BuildConfig.VERSION_NAME}\n2026 © Ltrademark. All rights reserved."
+        txtVersion.text = "Version ${BuildConfig.VERSION_NAME}\n2025-2026 © Ltrademark. Licensed under GPLv3."
 
         val btnOk = dialogView.findViewById<Button>(R.id.btnAboutOk)
         btnOk.setOnClickListener {
@@ -794,7 +823,7 @@ class MainActivity : AppCompatActivity() {
             updateVisualContainerState(containerSettings, isServiceEnabled)
         }
 
-        restoreToneState("custom_tone_short", findViewById(R.id.txtShortToneName), findViewById(R.id.btnClearShort))
-        restoreToneState("custom_tone_long", findViewById(R.id.txtLongToneName), findViewById(R.id.btnClearLong))
+        restoreToneState("custom_tone_short", findViewById(R.id.txtShortToneName))
+        restoreToneState("custom_tone_long", findViewById(R.id.txtLongToneName))
     }
 }
