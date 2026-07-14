@@ -1,6 +1,7 @@
-- New: Chime mode picker, choose Sound, Vibrate, or Both for each hourly chime
-- New: Option to play the chime aloud even when the ringer is silent or on vibrate (Do Not Disturb is still respected)
+- New: Chime mode, pick Sound, Vibrate, or Both for each hourly chime
+- New: Play the chime even on silent/vibrate (Do Not Disturb still respected)
 - Vibration now matches the tone length, so long and short tones feel different
-- Removed the experimental lock-screen visual pulse
-- Fewer permissions requested: no more exact-alarm, wake-lock, or draw-over-other-apps
-- Clearer wording on a few settings and internal cleanup
+- Notification shows normally by default; use Minimize notification to shrink it
+- Removed the experimental visual pulse
+- Fewer permissions: no more exact-alarm, wake-lock, or draw-over-other-apps
+- Custom timing shows Reset and warnings only when relevant, plus cleanup
