@@ -49,10 +49,10 @@ class ChimeService : Service() {
 
         // Two channels back the ongoing notification: a normal, visible one and a
         // minimized one (no status-bar icon, collapsed in the shade). Which one is
-        // used follows the "Minimize notification" toggle. Distinct IDs from the
-        // pre-1.7 "chime_channel" so the new importances actually take effect
-        // (channel importance is fixed once created).
-        const val CHANNEL_VISIBLE = "chime_channel_visible"
+        // used follows the "Minimize notification" toggle. IDs are bumped whenever
+        // the importance changes, because a channel's importance is fixed once
+        // created (reusing an old ID would keep the old, wrong importance).
+        const val CHANNEL_VISIBLE = "chime_channel_shown"
         const val CHANNEL_MINIMIZED = "chime_channel_min"
 
         // Safe bounds for the user-configurable gap between tones (#6).
@@ -295,18 +295,23 @@ class ChimeService : Service() {
     }
 
     /**
-     * Creates both notification channels (idempotent) and drops the pre-1.7
-     * single channel. The minimized channel is IMPORTANCE_MIN (no status-bar
-     * icon, collapsed); the visible one is IMPORTANCE_LOW (shown, still silent,
-     * an ongoing service notification should never make noise).
+     * Creates both notification channels (idempotent) and drops the superseded
+     * ones. The visible channel is IMPORTANCE_DEFAULT so it lands in the normal
+     * (not "Silent") section of the shade; its sound is nulled so a persistent
+     * service notification never actually dings. The minimized channel is
+     * IMPORTANCE_MIN (no status-bar icon, collapsed).
      */
     private fun ensureChannels() {
         val nm = getSystemService(NotificationManager::class.java)
+        // Superseded IDs from earlier builds (importance is fixed once created).
         nm.deleteNotificationChannel("chime_channel")
+        nm.deleteNotificationChannel("chime_channel_visible")
         nm.createNotificationChannel(
-            NotificationChannel(CHANNEL_VISIBLE, "Hourly Chime Service", NotificationManager.IMPORTANCE_LOW).apply {
+            NotificationChannel(CHANNEL_VISIBLE, "Hourly Chime Service", NotificationManager.IMPORTANCE_DEFAULT).apply {
                 description = "Ongoing notification for the hourly chime service"
                 setShowBadge(false)
+                setSound(null, null)
+                enableVibration(false)
             }
         )
         nm.createNotificationChannel(
@@ -337,7 +342,8 @@ class ChimeService : Service() {
 
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_stat_chime)
-            .setPriority(if (minimize) NotificationCompat.PRIORITY_MIN else NotificationCompat.PRIORITY_LOW)
+            .setPriority(if (minimize) NotificationCompat.PRIORITY_MIN else NotificationCompat.PRIORITY_DEFAULT)
+            .setOnlyAlertOnce(true)
             .setCategory(Notification.CATEGORY_SERVICE)
             .setContentIntent(mainPendingIntent)
             .setOngoing(true)
@@ -409,7 +415,8 @@ class ChimeService : Service() {
         val builder = NotificationCompat.Builder(this, channelId)
             .setContentTitle(getString(R.string.status_active))
             .setSmallIcon(R.drawable.ic_stat_chime)
-            .setPriority(if (minimize) NotificationCompat.PRIORITY_MIN else NotificationCompat.PRIORITY_LOW)
+            .setOnlyAlertOnce(true)
+            .setPriority(if (minimize) NotificationCompat.PRIORITY_MIN else NotificationCompat.PRIORITY_DEFAULT)
             .addAction(android.R.drawable.ic_media_next, getString(R.string.action_skip_next),
                 PendingIntent.getService(this, 1, Intent(this, ChimeService::class.java).apply { action = ACTION_SKIP_NEXT }, PendingIntent.FLAG_IMMUTABLE))
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.action_disable),
