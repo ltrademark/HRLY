@@ -491,19 +491,36 @@ class MainActivity : AppCompatActivity() {
         val container = findViewById<LinearLayout>(R.id.containerTiming)
         val slider = findViewById<Slider>(R.id.sliderGap)
         val gapValue = findViewById<TextView>(R.id.txtGapValue)
+        val resetBtn = findViewById<Button>(R.id.btnGapReset)
+        val warning = findViewById<TextView>(R.id.txtGapWarning)
 
         fun showGap(ms: Int) { gapValue.text = getString(R.string.tone_gap_value, ms) }
+
+        // Outside this band the gap is short enough to merge tones or long enough
+        // to blur the hourly count, so the warning is shown.
+        val warnMinMs = 50
+        val warnMaxMs = 1000
+
+        // Reset shows only once the gap differs from the default; the warning shows
+        // only when the gap is short/long enough to hurt the hourly cue.
+        fun updateHints(ms: Int) {
+            resetBtn.visibility = if (ms == ChimeService.DEFAULT_TONE_GAP_MS) View.GONE else View.VISIBLE
+            val extreme = ms < warnMinMs || ms > warnMaxMs
+            warning.visibility = if (extreme) View.VISIBLE else View.GONE
+        }
 
         slider.value = prefs.getInt("tone_gap_ms", ChimeService.DEFAULT_TONE_GAP_MS)
             .coerceIn(ChimeService.MIN_TONE_GAP_MS, ChimeService.MAX_TONE_GAP_MS).toFloat()
         showGap(slider.value.toInt())
+        updateHints(slider.value.toInt())
         slider.setLabelFormatter { getString(R.string.tone_gap_value, it.toInt()) }
         slider.addOnChangeListener { _, value, _ ->
             prefs.edit { putInt("tone_gap_ms", value.toInt()) }
             showGap(value.toInt())
+            updateHints(value.toInt())
         }
 
-        findViewById<Button>(R.id.btnGapReset).setOnClickListener {
+        resetBtn.setOnClickListener {
             slider.value = ChimeService.DEFAULT_TONE_GAP_MS
                 .coerceIn(ChimeService.MIN_TONE_GAP_MS, ChimeService.MAX_TONE_GAP_MS).toFloat()
         }
