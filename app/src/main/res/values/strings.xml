@@ -46,6 +46,7 @@
     <!-- Minimize notification (#7) -->
     <string name="minimize_notification">Minimize notification</string>
     <string name="minimize_notification_description">Reduce it to the minimum Android allows for a background service (the icon can\'t be fully removed)</string>
+    <string name="minimize_notification_legacy_note">On Android 11 and older, Android keeps this notification visible; only its text can be hidden.</string>
 
     <!-- Chime timing / crop (#6) -->
     <string name="chime_timing">Custom timing</string>

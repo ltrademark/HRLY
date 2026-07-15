@@ -97,6 +97,17 @@ class MainActivity : AppCompatActivity() {
 
         supportActionBar?.title = "HRLY Settings"
 
+        // The layout pads the content down by actionBarSize so it clears the bar
+        // under edge-to-edge (API 35+, where content draws behind the bar). On
+        // older Android the standard action bar already reserves its space, so that
+        // padding double-counts and leaves a gap under the toolbar. Zero it there.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            val container = findViewById<View>(R.id.settingsContainer)
+            container.setPadding(
+                container.paddingLeft, 0, container.paddingRight, container.paddingBottom
+            )
+        }
+
         prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
 
         checkAndRequestPermissions()
@@ -476,6 +487,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupNotificationPref() {
         val sw = findViewById<SwitchMaterial>(R.id.switchHideNextChime)
+        // Android floors foreground-service notifications and, before Android 12,
+        // keeps them out of the collapsed/silent area, so full minimizing only
+        // works on API 31+. Warn on older versions so it isn't taken for a bug.
+        findViewById<TextView>(R.id.txtMinimizeNote).visibility =
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) View.VISIBLE else View.GONE
         sw.isChecked = prefs.getBoolean("hide_next_chime", false)
         sw.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit { putBoolean("hide_next_chime", isChecked) }

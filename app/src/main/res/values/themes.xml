@@ -31,4 +31,13 @@
         <item name="elevation">0dp</item>
         <item name="background">@color/light_background_offset</item>
     </style>
+
+    <!-- Pill corners for the Chime mode segmented control. A percentage size always
+         resolves to a clean stadium (half the button height), so it matches the
+         other pill buttons without the overshoot a fixed 50dp causes inside a
+         MaterialButtonToggleGroup. Inner corners are squared by the group. -->
+    <style name="ShapeAppearanceOverlay.HRLY.Pill" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>
