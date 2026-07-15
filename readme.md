@@ -28,13 +28,17 @@ These tones compound to announce the current hour. For example, 7:00 will be ann
 
 ## Features
 
-*   **Simple Time System:** Easily learn the time-telling system.
-*   **Customizable Sounds:** Use your own audio files for both the short and long tones.
-*   **Notification Controls:** Skip the next chime or stop the service directly from the notification.
+*   **Simple Time System:** Long and short tones compound to count out the hour.
+*   **Chime Modes:** Pick Sound, Vibrate, or Both, with vibration length matched to each tone.
+*   **Play in Silent or Vibrate:** Optionally keep the chime audible even when the ringer is silenced or on vibrate (Do Not Disturb is still respected).
+*   **Single Chime:** Play one tone each hour instead of counting the hour.
+*   **Custom Sounds:** Use your own audio files for the short and long tones, and trim them to length.
+*   **Custom Timing:** Adjust the gap between tones.
+*   **Quiet Hours:** Pause chimes during a time range you set.
+*   **Notification Controls:** Skip the next chime, pause, or stop the service from the notification, or minimize it.
 *   **Background Service:** Runs efficiently in the background to chime on the hour.
-*   **User Control:** Easily enable or disable the main chime service and custom sounds.
 *   **Minimalist Design:** A clean, no-frills interface.
-*   **Open Source:** A "View Source" button provides a quick link to the project's GitHub page.
+*   **Open Source:** Licensed under the GNU GPLv3.
 
 ## Screenshots
 
