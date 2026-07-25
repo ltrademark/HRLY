@@ -31,27 +31,27 @@
     <string name="quiet_end">To</string>
 
     <!-- Single chime mode (#3 / #8) -->
-    <string name="single_chime">Single chime</string>
+    <string name="single_chime">Single Chime</string>
     <string name="single_chime_description">Play one tone each hour instead of counting the hour</string>
 
     <!-- Chime mode (#11) -->
-    <string name="chime_mode">Chime mode</string>
+    <string name="chime_mode">Chime Mode</string>
     <string name="chime_mode_description">Choose how each hourly chime plays</string>
     <string name="mode_sound">Sound</string>
     <string name="mode_vibrate">Vibrate</string>
     <string name="mode_both">Both</string>
-    <string name="override_silent">Play sound in silent/vibrate mode</string>
+    <string name="override_silent">Play Sound in Silent/Vibrate Mode</string>
     <string name="override_silent_description">Chime aloud even when the ringer is silent or on vibrate. Do Not Disturb is still respected.</string>
 
     <!-- Minimize notification (#7) -->
-    <string name="minimize_notification">Minimize notification</string>
+    <string name="minimize_notification">Minimize Notification</string>
     <string name="minimize_notification_description">Reduce it to the minimum Android allows for a background service (the icon can\'t be fully removed)</string>
     <string name="minimize_notification_legacy_note">On Android 11 and older, Android keeps this notification visible; only its text can be hidden.</string>
 
     <!-- Chime timing / crop (#6) -->
-    <string name="chime_timing">Custom timing</string>
+    <string name="chime_timing">Custom Timing</string>
     <string name="chime_timing_description">Adjust the gap between tones</string>
-    <string name="tone_gap_label">Gap between tones</string>
+    <string name="tone_gap_label">Gap Between Tones</string>
     <string name="tone_gap_value">%1$d ms</string>
     <string name="reset">Reset</string>
     <string name="tone_gap_warning">Very short or very long gaps can defeat the purpose of a clear hourly cue.</string>

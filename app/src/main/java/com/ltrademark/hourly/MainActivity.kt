@@ -429,20 +429,23 @@ class MainActivity : AppCompatActivity() {
         val sw = findViewById<SwitchMaterial>(R.id.switchSimpleMode)
         val enabled = prefs.getBoolean("simple_chime_enabled", false)
         sw.isChecked = enabled
-        applySingleModeToSoundPickers(enabled)
+        applySingleMode(enabled)
         sw.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit { putBoolean("simple_chime_enabled", isChecked) }
-            applySingleModeToSoundPickers(isChecked)
+            applySingleMode(isChecked)
         }
     }
 
     // In single-chime mode there is only one tone, so the custom-sound section shows a
-    // single "Tone" picker instead of separate Short/Long pickers.
-    private fun applySingleModeToSoundPickers(singleMode: Boolean) {
+    // single "Tone" picker instead of separate Short/Long pickers, and the custom-timing
+    // section (which sets the gap *between* tones) no longer applies, so it is hidden.
+    private fun applySingleMode(singleMode: Boolean) {
         findViewById<TextView>(R.id.txtShortToneLabel).setText(
             if (singleMode) R.string.tone else R.string.short_tone
         )
         findViewById<LinearLayout>(R.id.rowLongTone).visibility =
+            if (singleMode) View.GONE else View.VISIBLE
+        findViewById<LinearLayout>(R.id.containerCustomTiming).visibility =
             if (singleMode) View.GONE else View.VISIBLE
     }
 

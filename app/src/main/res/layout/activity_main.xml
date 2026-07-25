@@ -416,8 +416,10 @@
                     </LinearLayout>
                     </LinearLayout>
 
-                    <!-- Custom timing + its slider grouped so no divider splits them -->
+                    <!-- Custom timing + its slider grouped so no divider splits them.
+                         Hidden entirely in single-chime mode (only one tone, so no gap). -->
                     <LinearLayout
+                        android:id="@+id/containerCustomTiming"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
