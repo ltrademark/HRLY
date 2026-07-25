@@ -133,9 +133,10 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
-        // No exact-alarm permission request: the service schedules via
-        // setAlarmClock(), which is exempt from SCHEDULE_EXACT_ALARM. Calling
-        // canScheduleExactAlarms() here also crashed on API < 31 (#1).
+        // No runtime exact-alarm request needed: the manifest declares USE_EXACT_ALARM
+        // (auto-granted) and SCHEDULE_EXACT_ALARM (default-granted on API 31-32), which
+        // cover the setAlarmClock() the service uses. Do NOT call canScheduleExactAlarms()
+        // here: that API only exists on API 31+ and crashed on older Android (#1).
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

@@ -8,6 +8,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- The hourly chime is scheduled with setAlarmClock(), which Android classifies as an
+         exact alarm and requires one of these on API 31+. USE_EXACT_ALARM (auto-granted,
+         non-revocable) covers API 33+; SCHEDULE_EXACT_ALARM (default-granted) covers 31-32.
+         Dropping these in 1.7 caused a launch crash (#1). -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
 
     <application
         android:allowBackup="true"

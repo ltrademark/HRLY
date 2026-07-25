@@ -516,9 +516,13 @@ class ChimeService : Service() {
      *
      * Uses setAlarmClock() instead of setExactAndAllowWhileIdle(): the latter is still
      * deferrable by Doze / OEM alarm-batching, which made chimes fire minutes late (#10).
-     * setAlarmClock is exempt from those delays. It also does NOT require the
-     * SCHEDULE_EXACT_ALARM permission, so we no longer call canScheduleExactAlarms().
-     * That API only exists on API 31+ and crashed on Android 8-11 (#1).
+     * setAlarmClock is exempt from those delays.
+     *
+     * setAlarmClock IS an exact alarm, so on API 31+ it requires USE_EXACT_ALARM or
+     * SCHEDULE_EXACT_ALARM, both declared in the manifest. (Dropping them in 1.7 on the
+     * mistaken belief that setAlarmClock was exempt caused a launch crash, #1.) We still
+     * do NOT call canScheduleExactAlarms() here: USE_EXACT_ALARM is auto-granted, and that
+     * API only exists on API 31+ and crashed on Android 8-11 in the original #1.
      *
      * Trade-off: setAlarmClock surfaces a standing alarm indicator in the status bar.
      */
