@@ -675,6 +675,10 @@ class MainActivity : AppCompatActivity() {
             .setOnDismissListener { previewPlayer?.release(); previewPlayer = null }
             .show()
 
+        // Drop the default dialog window background so only the rounded surface shows,
+        // matching the About dialog (otherwise the card looks nested in a square window).
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
         // Decode the waveform off the main thread and paint it in when ready.
         Thread {
             val amps = WaveformDecoder.decode(file.absolutePath)

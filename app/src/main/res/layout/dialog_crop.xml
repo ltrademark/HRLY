@@ -1,177 +1,227 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="20dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/crop_title"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="?android:textColor"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/crop_range_label"
-        android:textSize="14sp"
-        android:layout_marginTop="8dp"
-        android:textColor="?android:textColorSecondary"/>
-
-    <TextView
-        android:id="@+id/txtCropDuration"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textStyle="bold"
-        android:textColor="?android:textColor"/>
-
-    <com.ltrademark.hourly.WaveformTrimView
-        android:id="@+id/waveform"
-        android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:layout_marginTop="16dp" />
-
-    <!-- Inline numeric inputs, for when the handles are too fiddly to drag precisely. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="16dp"
-        android:baselineAligned="false">
+        android:background="@drawable/bg_rounded_surface"
+        android:orientation="vertical">
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:orientation="vertical"
-            android:layout_marginEnd="12dp">
+            android:padding="24dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/crop_start_label"
-                android:textSize="12sp"
+                android:text="@string/crop_title"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="?android:textColor"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/crop_range_label"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp"
                 android:textColor="?android:textColorSecondary"/>
 
+            <TextView
+                android:id="@+id/txtCropDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textStyle="bold"
+                android:textColor="?android:textColor"/>
+
+            <com.ltrademark.hourly.WaveformTrimView
+                android:id="@+id/waveform"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="16dp" />
+
+            <!-- Inline numeric inputs, for when the handles are too fiddly to drag precisely. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:layout_marginTop="16dp"
+                android:baselineAligned="false">
 
-                <EditText
-                    android:id="@+id/etCropStart"
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:inputType="numberDecimal"
-                    android:imeOptions="actionDone"
-                    android:maxLines="1"
-                    android:textColor="?android:textColor"
-                    android:autofillHints=""/>
+                    android:orientation="vertical"
+                    android:layout_marginEnd="12dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/crop_start_label"
+                        android:textSize="12sp"
+                        android:textColor="?android:textColorSecondary"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <EditText
+                            android:id="@+id/etCropStart"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:inputType="numberDecimal"
+                            android:imeOptions="actionDone"
+                            android:maxLines="1"
+                            android:textColor="?android:textColor"
+                            android:autofillHints=""/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/crop_seconds_suffix"
+                            android:layout_marginStart="4dp"
+                            android:textColor="?android:textColorSecondary"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/crop_seconds_suffix"
-                    android:layout_marginStart="4dp"
-                    android:textColor="?android:textColorSecondary"/>
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/crop_end_label"
+                        android:textSize="12sp"
+                        android:textColor="?android:textColorSecondary"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <EditText
+                            android:id="@+id/etCropEnd"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:inputType="numberDecimal"
+                            android:imeOptions="actionDone"
+                            android:maxLines="1"
+                            android:textColor="?android:textColor"
+                            android:autofillHints=""/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/crop_seconds_suffix"
+                            android:layout_marginStart="4dp"
+                            android:textColor="?android:textColorSecondary"/>
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/txtCropRecommended"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textSize="12sp"
+                android:visibility="gone"
+                android:textColor="?android:textColorSecondary"/>
+
+            <TextView
+                android:id="@+id/txtCropWarning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="12sp"
+                android:visibility="gone"
+                android:textColor="#FFC107"/>
         </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:listDivider"
+            android:alpha="1"/>
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <Button
+                android:id="@+id/btnCropCancel"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/crop_end_label"
-                android:textSize="12sp"
-                android:textColor="?android:textColorSecondary"/>
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:text="@string/crop_cancel"
+                android:textAllCaps="false"
+                android:letterSpacing="0"
+                android:maxLines="1"
+                android:minWidth="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                app:cornerRadius="50dp"/>
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <Button
+                android:id="@+id/btnCropPreview"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:text="@string/crop_preview"
+                android:textAllCaps="false"
+                android:letterSpacing="0"
+                android:maxLines="1"
+                android:minWidth="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                app:cornerRadius="50dp"/>
 
-                <EditText
-                    android:id="@+id/etCropEnd"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:inputType="numberDecimal"
-                    android:imeOptions="actionDone"
-                    android:maxLines="1"
-                    android:textColor="?android:textColor"
-                    android:autofillHints=""/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/crop_seconds_suffix"
-                    android:layout_marginStart="4dp"
-                    android:textColor="?android:textColorSecondary"/>
-            </LinearLayout>
+            <Button
+                android:id="@+id/btnCropSave"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:text="@string/crop_save"
+                android:textColor="@android:color/white"
+                android:textAllCaps="false"
+                android:letterSpacing="0"
+                android:maxLines="1"
+                android:minWidth="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                app:cornerRadius="50dp"/>
         </LinearLayout>
+
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/txtCropRecommended"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:textSize="12sp"
-        android:visibility="gone"
-        android:textColor="?android:textColorSecondary"/>
-
-    <TextView
-        android:id="@+id/txtCropWarning"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textSize="12sp"
-        android:visibility="gone"
-        android:textColor="#FFC107"/>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="end"
-        android:layout_marginTop="16dp">
-
-        <Button
-            android:id="@+id/btnCropCancel"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/crop_cancel"/>
-
-        <Button
-            android:id="@+id/btnCropPreview"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            app:cornerRadius="50dp"
-            android:text="@string/crop_preview"/>
-
-        <Button
-            android:id="@+id/btnCropSave"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            app:cornerRadius="50dp"
-            android:text="@string/crop_save"/>
-    </LinearLayout>
-
-</LinearLayout>
+</ScrollView>
