@@ -42,9 +42,8 @@ These tones compound to announce the current hour. For example, 7:00 will be ann
 
 ## Screenshots
 
-| | | |
-| -- | -- | -- |
 | <img alt="1" src="https://github.com/user-attachments/assets/fcd0a0a0-750a-4b5c-8fd9-a845e17e7500" /> | <img alt="2" src="https://github.com/user-attachments/assets/9e941aff-3085-4c0c-8ebd-b6f2ffe52df3" /> | <img alt="3" src="https://github.com/user-attachments/assets/42f1595c-731b-46be-8715-28a3195e396b" /> |
+| -- | -- | -- |
 | <img alt="4" src="https://github.com/user-attachments/assets/a8b14bca-910c-4dca-b691-89cbbaa38670" /> | <img alt="5" src="https://github.com/user-attachments/assets/e9383a17-70e0-4372-bd3b-bce5179f29d2" /> | <img alt="6" src="https://github.com/user-attachments/assets/cd3be9c5-e2f8-4105-a1ff-a13cfda4de69" /> |
 
 ---
@@ -52,5 +51,4 @@ These tones compound to announce the current hour. For example, 7:00 will be ann
 <div align="center">
   <p>2025-2026 &copy; Ltrademark&reg;.</p>
   <p>Code licensed under the GNU General Public License v3. See <a href="./LICENSE">LICENSE</a> for details.</p>
-  <p>The HRLY name, logo, and branding are not covered by that license. See <a href="./TRADEMARK.md">TRADEMARK.md</a>.</p>
 </div>
