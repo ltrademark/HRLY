@@ -1,0 +1,4 @@
+- Fixed a crash on launch: the exact-alarm permission removed in 1.7 turned out to be required, so it's back. Thanks to everyone who reported it.
+- Single Chime now hides the Custom Timing section, since there's no gap to adjust with one tone.
+- Tidied up the settings labels.
+- Refreshed the tone trimming dialog to match the app's modern look.
