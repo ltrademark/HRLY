@@ -17,3 +17,6 @@
 .cxx
 local.properties
 .idea/deploymentTargetSelector.xml
+/app/src/main/assets/adi-registration.properties
+/app/release/*.aab
+/keystore.properties
