@@ -29,9 +29,20 @@ class ChimeReceiver : BroadcastReceiver() {
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == "android.intent.action.QUICKBOOT_POWERON") {
-            val serviceIntent = Intent(context, ChimeService::class.java)
-            context.startForegroundService(serviceIntent)
+            // Reschedule only, WITHOUT touching ChimeService. The service is a
+            // mediaPlayback foreground service, and Android 15+ throws
+            // ForegroundServiceStartNotAllowedException for that FGS type when it is
+            // started from a BOOT_COMPLETED receiver, so the old startForegroundService()
+            // here crashed on every reboot. Setting the alarm is all this path ever did,
+            // and that needs no service. The ongoing notification comes back when the
+            // first chime fires.
+            val prefs = context.getSharedPreferences("hourly_prefs", Context.MODE_PRIVATE)
+            if (prefs.getBoolean("service_enabled", false)) {
+                ChimeScheduler.scheduleInHours(context, 1)
+            }
         } else {
+            // The alarm fired. Starting the FGS is allowed here: setAlarmClock() grants a
+            // temporary foreground-service-start exemption when the alarm goes off.
             val serviceIntent = Intent(context, ChimeService::class.java).apply {
                 action = ChimeService.ACTION_PLAY_CHIME
             }

@@ -382,31 +382,14 @@ class ChimeService : Service() {
             putBoolean("service_enabled", false)
         }
 
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        val intent = Intent(this, ChimeReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        alarmManager.cancel(pendingIntent)
+        ChimeScheduler.cancel(this)
 
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
     private fun skipNextChime() {
-        val intent = Intent(this, ChimeReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val calendar = Calendar.getInstance().apply {
-            add(Calendar.HOUR_OF_DAY, 2)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        scheduleExactAlarm(calendar.timeInMillis, pendingIntent)
+        ChimeScheduler.scheduleInHours(this, 2)
 
         val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
         val minimize = prefs.getBoolean("hide_next_chime", false)
@@ -496,45 +479,7 @@ class ChimeService : Service() {
     }
 
     private fun scheduleNextChime() {
-        val intent = Intent(this, ChimeReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val calendar = Calendar.getInstance().apply {
-            add(Calendar.HOUR_OF_DAY, 1)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        scheduleExactAlarm(calendar.timeInMillis, pendingIntent)
-    }
-
-    /**
-     * Schedules the chime alarm for the given time.
-     *
-     * Uses setAlarmClock() instead of setExactAndAllowWhileIdle(): the latter is still
-     * deferrable by Doze / OEM alarm-batching, which made chimes fire minutes late (#10).
-     * setAlarmClock is exempt from those delays.
-     *
-     * setAlarmClock IS an exact alarm, so on API 31+ it requires USE_EXACT_ALARM or
-     * SCHEDULE_EXACT_ALARM, both declared in the manifest. (Dropping them in 1.7 on the
-     * mistaken belief that setAlarmClock was exempt caused a launch crash, #1.) We still
-     * do NOT call canScheduleExactAlarms() here: USE_EXACT_ALARM is auto-granted, and that
-     * API only exists on API 31+ and crashed on Android 8-11 in the original #1.
-     *
-     * Trade-off: setAlarmClock surfaces a standing alarm indicator in the status bar.
-     */
-    private fun scheduleExactAlarm(triggerAtMillis: Long, pendingIntent: PendingIntent) {
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        val showIntent = PendingIntent.getActivity(
-            this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE
-        )
-        alarmManager.setAlarmClock(
-            AlarmManager.AlarmClockInfo(triggerAtMillis, showIntent),
-            pendingIntent
-        )
+        ChimeScheduler.scheduleInHours(this, 1)
     }
 
     override fun onDestroy() {
