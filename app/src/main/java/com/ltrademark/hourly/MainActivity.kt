@@ -245,6 +245,9 @@ class MainActivity : AppCompatActivity() {
         switchService.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit {
                 putBoolean("service_enabled", isChecked)
+                // Turning chimes off ends the pause too, so re-enabling starts clean
+                // instead of coming back already paused.
+                if (!isChecked) putBoolean("is_suspended", false)
             }
 
             updateVisualContainerState(containerSettings, isChecked)
@@ -255,6 +258,11 @@ class MainActivity : AppCompatActivity() {
                 startForegroundService(intent)
                 if (switchService.isPressed) Toast.makeText(this, "Hourly Chime Enabled", Toast.LENGTH_SHORT).show()
             } else {
+                // Cancel the alarm, not just the service. stopService() alone left the
+                // alarm armed, so the next hour re-launched the service and chimed even
+                // though the user had switched it off, then rescheduled itself forever.
+                // The notification's Disable action always did this via stopChimeService().
+                ChimeScheduler.cancel(this)
                 val intent = Intent(this, ChimeService::class.java)
                 stopService(intent)
             }

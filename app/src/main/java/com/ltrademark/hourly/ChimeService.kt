@@ -380,6 +380,9 @@ class ChimeService : Service() {
         val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
         prefs.edit {
             putBoolean("service_enabled", false)
+            // Disabling ends the pause too, so re-enabling starts clean instead of
+            // coming back already paused with the Resume banner showing.
+            putBoolean("is_suspended", false)
         }
 
         ChimeScheduler.cancel(this)
