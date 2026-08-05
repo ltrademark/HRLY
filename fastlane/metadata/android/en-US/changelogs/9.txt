@@ -1,0 +1,2 @@
+- Fixed chimes not coming back after a restart on Android 15 and newer.
+- Turning chimes off now sticks through a restart, instead of quietly switching itself back on.
