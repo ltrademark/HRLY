@@ -81,6 +81,7 @@
     <string name="status_suspended_description">Chimes are paused until you resume the service.</string>
     <string name="status_active">HRLY Active</string>
     <string name="notif_next_chime_at">Next chime at %1$s</string>
+    <string name="status_paused_banner">Chimes are paused</string>
     <string name="custom_tone_error">Couldn\'t play the custom tone. Using the default instead.</string>
 
 </resources>

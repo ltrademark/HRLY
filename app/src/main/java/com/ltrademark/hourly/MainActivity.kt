@@ -58,6 +58,22 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefs: SharedPreferences
     private val notificationPermissionsCode = 101
 
+    /**
+     * Keeps the paused banner live while this screen is open.
+     *
+     * onResume is not enough: the notification shade is an overlay that never pauses the
+     * activity, so pausing from the shade with the app open behind it would leave the
+     * banner hidden until the next cold start. The service shares this process, so it
+     * shares this SharedPreferences instance and the callback fires as soon as it writes.
+     * Held as a field because SharedPreferences only keeps a weak reference to listeners.
+     */
+    private val suspendPrefListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == "is_suspended" || key == "service_enabled") {
+                runOnUiThread { setupPausedBanner() }
+            }
+        }
+
     // Launchers for Native system sounds
     private val pickShortTone = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -112,6 +128,8 @@ class MainActivity : AppCompatActivity() {
 
         checkAndRequestPermissions()
         setupBatteryWarning()
+        setupPausedBanner()
+        prefs.registerOnSharedPreferenceChangeListener(suspendPrefListener)
 
         setupServiceToggle()
         setupFooterDebug()
@@ -151,6 +169,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("BatteryLife")
+    /**
+     * Shows a Resume banner while chimes are paused.
+     *
+     * Pause is only offered in the notification, so once the shade is dismissed there was
+     * no way back into the service and the pref looked stuck. Resume reuses the
+     * notification's own ACTION_TOGGLE_SUSPEND, which flips `is_suspended` and rebuilds
+     * the notification, so both entry points stay in sync.
+     */
+    private fun setupPausedBanner() {
+        val banner = findViewById<LinearLayout>(R.id.containerPausedBanner)
+        val btnResume = findViewById<Button>(R.id.btnResumeChimes)
+        val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+
+        // Paused only means anything while the service is on; a disabled service has no
+        // chimes to resume, and the switch already communicates that state.
+        val isPaused = prefs.getBoolean("service_enabled", false) &&
+                prefs.getBoolean("is_suspended", false)
+        banner.visibility = if (isPaused) View.VISIBLE else View.GONE
+
+        btnResume.setOnClickListener {
+            val intent = Intent(this, ChimeService::class.java).apply {
+                action = ChimeService.ACTION_TOGGLE_SUSPEND
+            }
+            startForegroundService(intent)
+            banner.visibility = View.GONE
+        }
+    }
+
     private fun setupBatteryWarning() {
         val containerWarning = findViewById<LinearLayout>(R.id.containerBatteryWarning)
         val btnFix = findViewById<Button>(R.id.btnFixBattery)
@@ -202,6 +248,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             updateVisualContainerState(containerSettings, isChecked)
+            setupPausedBanner()
 
             if (isChecked) {
                 val intent = Intent(this, ChimeService::class.java)
@@ -865,6 +912,9 @@ class MainActivity : AppCompatActivity() {
         val containerSettings = findViewById<LinearLayout>(R.id.containerSettings)
 
         setupBatteryWarning()
+        // Refreshed here too: pausing happens in the shade, often while this screen is
+        // still open behind it.
+        setupPausedBanner()
 
         if (switchService.isChecked != isServiceEnabled) {
             switchService.isChecked = isServiceEnabled
@@ -873,5 +923,10 @@ class MainActivity : AppCompatActivity() {
 
         restoreToneState("custom_tone_short", findViewById(R.id.txtShortToneName))
         restoreToneState("custom_tone_long", findViewById(R.id.txtLongToneName))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        prefs.unregisterOnSharedPreferenceChangeListener(suspendPrefListener)
     }
 }
