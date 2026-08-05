@@ -1,3 +1,4 @@
 - Fixed chimes not coming back after a restart on Android 15 and newer.
+- Fixed the Enable Hourly Chime switch not really stopping chimes: turning it off left the next one scheduled, so it kept playing every hour.
 - Turning chimes off now sticks through a restart, instead of quietly switching itself back on.
 - Paused chimes now show a Resume button in the app, so you're no longer stuck if the notification is gone.
