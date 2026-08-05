@@ -1,2 +1,3 @@
 - Fixed chimes not coming back after a restart on Android 15 and newer.
 - Turning chimes off now sticks through a restart, instead of quietly switching itself back on.
+- Paused chimes now show a Resume button in the app, so you're no longer stuck if the notification is gone.
