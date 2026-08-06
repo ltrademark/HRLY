@@ -35,8 +35,11 @@
             android:foregroundServiceType="mediaPlayback"
             android:exported="false" />
 
+        <!-- Boot and the chime are two separate receivers on purpose. This one re-arms the
+             alarm and never touches ChimeService, so no boot-registered class can reach the
+             mediaPlayback startForeground() that Android 15+ forbids from BOOT_COMPLETED. -->
         <receiver
-            android:name=".ChimeReceiver"
+            android:name=".BootReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -44,5 +47,12 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
+
+        <!-- The alarm's PendingIntent names this class explicitly, so it needs no filter and
+             must not be exported. -->
+        <receiver
+            android:name=".ChimeReceiver"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 </manifest>
