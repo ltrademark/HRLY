@@ -1,15 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<!-- Insets are applied in code (MainActivity.applyWindowInsets), not with
+     fitsSystemWindows: the toolbar takes the status-bar inset as its own top padding so its
+     background paints behind the status bar, and the scrolling content takes the
+     navigation-bar inset. This replaced a paddingTop="?attr/actionBarSize" hack plus a
+     per-API-level runtime correction, which guessed whether the action bar overlaid the
+     content. Material 1.14 changed that answer and reintroduced the gap the guess existed to
+     fix, so the guess is gone. -->
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
+    android:orientation="vertical"
     android:background="?android:windowBackground">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        style="@style/FlatToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/actionBarSize" />
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:fillViewport="true"
         android:scrollbars="none">
         <LinearLayout
@@ -19,7 +35,6 @@
             android:orientation="vertical"
             android:divider="@drawable/divider_item"
             android:showDividers="middle"
-            android:paddingTop="?attr/actionBarSize"
             android:paddingBottom="48dp">
 
             <LinearLayout
@@ -798,4 +813,4 @@
 
     </ScrollView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

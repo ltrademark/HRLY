@@ -18,18 +18,29 @@
         <item name="android:textColor">@color/light_content_primary</item>
         <item name="android:textColorSecondary">@color/light_content_secondary</item>
 
-        <item name="android:statusBarColor">@color/light_background_offset</item>
+        <!-- Transparent, not a colour: the toolbar paints behind the status bar (see
+             activity_main.xml) and needs to show through. API 35+ ignores this attribute and
+             is already transparent, but below that it still applies, and leaving it unset
+             fell back to colorPrimaryDark, which rendered the bar Material purple on API 30.
+             Kept as a theme value rather than a setStatusBarColor() call, since it was calls
+             like that which Play flagged as deprecated. -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
 
+        <!-- The toolbar is a real view in the layout now, not window decor, so that it can
+             take the status-bar inset as padding. -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
         <item name="elevation">0dp</item>
-        <item name="actionBarStyle">@style/FlatActionBar</item>
 
         <item name="titleTextColor">@color/light_content_primary</item>
     </style>
 
-    <style name="FlatActionBar" parent="Widget.MaterialComponents.ActionBar.Solid">
-        <item name="elevation">0dp</item>
-        <item name="background">@color/light_background_offset</item>
+    <style name="FlatToolbar" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/light_background_offset</item>
+        <item name="titleTextColor">@color/light_content_primary</item>
+        <item name="android:elevation">0dp</item>
     </style>
 
     <!-- Pill corners for the Chime mode segmented control. A percentage size always

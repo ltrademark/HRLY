@@ -48,6 +48,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
 import com.google.android.material.switchmaterial.SwitchMaterial
@@ -109,20 +112,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Draw behind the system bars on every version, not just where the platform does it
+        // by default (API 35+). Without this the toolbar's inset padding would be zero on
+        // older Android and the two would look different.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContentView(R.layout.activity_main)
 
+        setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.title = "HRLY Settings"
 
-        // The layout pads the content down by actionBarSize so it clears the bar
-        // under edge-to-edge (API 35+, where content draws behind the bar). On
-        // older Android the standard action bar already reserves its space, so that
-        // padding double-counts and leaves a gap under the toolbar. Zero it there.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            val container = findViewById<View>(R.id.settingsContainer)
-            container.setPadding(
-                container.paddingLeft, 0, container.paddingRight, container.paddingBottom
-            )
-        }
+        applyWindowInsets()
 
         prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
 
@@ -169,6 +170,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("BatteryLife")
+    /**
+     * Puts the system-bar insets where they belong, once, from the real inset values.
+     *
+     * The toolbar takes the top inset as padding, so its own background paints behind the
+     * status bar and the title still sits below it. The scrolling content takes the bottom
+     * inset on top of its existing padding, so the last row clears the navigation bar.
+     *
+     * This replaced `paddingTop="?attr/actionBarSize"` plus an SDK_INT check that guessed
+     * whether the action bar overlaid the content. The guess was wrong on API 30 once, and
+     * wrong again on API 37 after Material 1.14 changed the decor behaviour. Reading the
+     * insets removes the need to predict it.
+     */
+    private fun applyWindowInsets() {
+        val toolbar = findViewById<View>(R.id.toolbar)
+        val content = findViewById<View>(R.id.settingsContainer)
+        val basePaddingBottom = content.paddingBottom
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rootContainer)) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            toolbar.setPadding(
+                toolbar.paddingLeft, bars.top, toolbar.paddingRight, toolbar.paddingBottom
+            )
+            content.setPadding(
+                content.paddingLeft,
+                content.paddingTop,
+                content.paddingRight,
+                basePaddingBottom + bars.bottom
+            )
+            insets
+        }
+    }
+
     /**
      * Shows a Resume banner while chimes are paused.
      *

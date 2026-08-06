@@ -18,17 +18,21 @@
         <item name="android:textColor">@color/dark_content_primary</item>
         <item name="android:textColorSecondary">@color/dark_content_secondary</item>
 
-        <item name="android:statusBarColor">@color/dark_background_offset</item>
-
         <item name="elevation">0dp</item>
-        <item name="actionBarStyle">@style/FlatActionBar</item>
+
+        <!-- See the light theme: transparent so the toolbar shows through below API 35. -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
 
         <item name="titleTextColor">@color/dark_content_primary</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
-    <style name="FlatActionBar" parent="Widget.MaterialComponents.ActionBar.Solid">
-        <item name="elevation">0dp</item>
-        <item name="background">@color/dark_background_offset</item>
+    <style name="FlatToolbar" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/dark_background_offset</item>
+        <item name="titleTextColor">@color/dark_content_primary</item>
+        <item name="android:elevation">0dp</item>
     </style>
 </resources>
