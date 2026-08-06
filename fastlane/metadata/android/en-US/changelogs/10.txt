@@ -1,0 +1,1 @@
+- Internal cleanup: the restart and the hourly chime now use separate handlers, so the app can prove it never launches its audio service at boot. No change to how HRLY behaves.
