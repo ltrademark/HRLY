@@ -105,12 +105,25 @@ class ChimeService : Service() {
             ACTION_PLAY_CHIME -> {
                 val testHour = intent.getIntExtra(EXTRA_TEST_HOUR, -1)
                 val hourToPlay = if (testHour != -1) testHour else Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+
+                // An alarm can outlive being switched off: before 1.72 the in-app switch
+                // stopped the service without cancelling the alarm, so the next hour chimed
+                // anyway and rescheduled itself, repeating forever. Anyone who switched
+                // chimes off on an older build still has one of those queued, so clean it up
+                // here rather than honour it. Checked BEFORE scheduleNextChime() below, or
+                // the stale alarm would just queue another one.
+                if (testHour == -1 && !prefs.getBoolean("service_enabled", false)) {
+                    ChimeScheduler.cancel(this)
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
 
                 if (testHour == -1) {
                     scheduleNextChime()
                 }
 
-                val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
                 val isSuspended = prefs.getBoolean("is_suspended", false)
 
                 if (testHour == -1 && (isDndActive() || isQuietTime() || isSuspended)) {
