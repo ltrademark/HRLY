@@ -1,0 +1,3 @@
+- The status bar now matches the title bar again on Android 15 and newer, instead of showing a mismatched strip above it.
+- Fixed a leftover hourly chime that could still play once for anyone who had switched chimes off on an older version.
+- Updated the Material components library, and reworked how the layout fits around the system bars so it stays correct on future Android releases.

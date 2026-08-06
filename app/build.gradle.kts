@@ -11,8 +11,8 @@ android {
         applicationId = "com.ltrademark.hourly"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10
-        versionName = "1.73"
+        versionCode = 11
+        versionName = "1.75"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
