@@ -53,7 +53,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
-import com.google.android.material.switchmaterial.SwitchMaterial
+import androidx.appcompat.widget.SwitchCompat
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
@@ -270,7 +270,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupServiceToggle() {
-        val switchService = findViewById<SwitchMaterial>(R.id.switchService)
+        val switchService = findViewById<SwitchCompat>(R.id.switchService)
         // All chime configuration lives in one container that is shown only while the
         // service is enabled; the inner sections manage their own expand/collapse.
         val containerSettings = findViewById<LinearLayout>(R.id.containerSettings)
@@ -317,7 +317,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupCustomSounds() {
-        val switchCustomSounds = findViewById<SwitchMaterial>(R.id.switchCustomSounds)
+        val switchCustomSounds = findViewById<SwitchCompat>(R.id.switchCustomSounds)
         val containerSoundPickers = findViewById<LinearLayout>(R.id.containerSoundPickers)
 
         val isCustomEnabled = prefs.getBoolean("custom_sounds_enabled", false)
@@ -460,7 +460,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupQuietHours() {
-        val switchQuiet = findViewById<SwitchMaterial>(R.id.switchQuietHours)
+        val switchQuiet = findViewById<SwitchCompat>(R.id.switchQuietHours)
         val containerPickers = findViewById<LinearLayout>(R.id.containerQuietPickers)
         val btnStart = findViewById<Button>(R.id.btnQuietStart)
         val btnEnd = findViewById<Button>(R.id.btnQuietEnd)
@@ -514,7 +514,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSimpleMode() {
-        val sw = findViewById<SwitchMaterial>(R.id.switchSimpleMode)
+        val sw = findViewById<SwitchCompat>(R.id.switchSimpleMode)
         val enabled = prefs.getBoolean("simple_chime_enabled", false)
         sw.isChecked = enabled
         applySingleMode(enabled)
@@ -539,7 +539,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupChimeMode() {
         val toggle = findViewById<MaterialButtonToggleGroup>(R.id.toggleChimeMode)
-        val override = findViewById<SwitchMaterial>(R.id.switchOverrideSilent)
+        val override = findViewById<SwitchCompat>(R.id.switchOverrideSilent)
 
         // Resolve the current mode, migrating the pre-1.7 vibrate_enabled pref.
         val mode = prefs.getString("chime_mode", null)
@@ -578,7 +578,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupNotificationPref() {
-        val sw = findViewById<SwitchMaterial>(R.id.switchHideNextChime)
+        val sw = findViewById<SwitchCompat>(R.id.switchHideNextChime)
         // Android floors foreground-service notifications and, before Android 12,
         // keeps them out of the collapsed/silent area, so full minimizing only
         // works on API 31+. Warn on older versions so it isn't taken for a bug.
@@ -595,7 +595,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupTiming() {
-        val sw = findViewById<SwitchMaterial>(R.id.switchTiming)
+        val sw = findViewById<SwitchCompat>(R.id.switchTiming)
         val container = findViewById<LinearLayout>(R.id.containerTiming)
         val slider = findViewById<Slider>(R.id.sliderGap)
         val gapValue = findViewById<TextView>(R.id.txtGapValue)
@@ -949,7 +949,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         val isServiceEnabled = prefs.getBoolean("service_enabled", false)
-        val switchService = findViewById<SwitchMaterial>(R.id.switchService)
+        val switchService = findViewById<SwitchCompat>(R.id.switchService)
         val containerSettings = findViewById<LinearLayout>(R.id.containerSettings)
 
         setupBatteryWarning()

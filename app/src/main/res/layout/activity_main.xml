@@ -74,8 +74,9 @@
                             android:textColor="?android:textColorSecondary"/>
                     </LinearLayout>
 
-                    <com.google.android.material.switchmaterial.SwitchMaterial
+                    <com.google.android.material.materialswitch.MaterialSwitch
                         android:id="@+id/switchService"
+                        style="@style/HrlySwitch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:contentDescription="@string/enable_hourly_chime" />
@@ -260,8 +261,9 @@
                                 android:textColor="?android:textColorSecondary"/>
                         </LinearLayout>
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchOverrideSilent"
+                            style="@style/HrlySwitch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:contentDescription="@string/override_silent" />
@@ -296,8 +298,9 @@
                                 android:textColor="?android:textColorSecondary"/>
                         </LinearLayout>
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchSimpleMode"
+                            style="@style/HrlySwitch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:contentDescription="@string/single_chime" />
@@ -338,8 +341,9 @@
                                 android:textColor="?android:textColorSecondary"/>
                         </LinearLayout>
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchCustomSounds"
+                            style="@style/HrlySwitch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
                     </LinearLayout>
@@ -510,8 +514,9 @@
                                 android:textColor="?android:textColorSecondary"/>
                         </LinearLayout>
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchTiming"
+                            style="@style/HrlySwitch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:contentDescription="@string/chime_timing" />
@@ -609,8 +614,9 @@
                                 android:textColor="?android:textColorSecondary"/>
                         </LinearLayout>
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchQuietHours"
+                            style="@style/HrlySwitch"
                             android:layout_width="wrap_content"
                             android:contentDescription="@string/quiet_hours_description"
                             android:layout_height="wrap_content" />
@@ -726,8 +732,9 @@
                                 android:visibility="gone"/>
                         </LinearLayout>
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
+                        <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchHideNextChime"
+                            style="@style/HrlySwitch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:contentDescription="@string/minimize_notification" />

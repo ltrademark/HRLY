@@ -43,6 +43,32 @@
         <item name="android:elevation">0dp</item>
     </style>
 
+    <!--
+      The one style every toggle uses. Everything here is load-bearing, and each item exists
+      because leaving it out produced a visible defect:
+
+      - The Material3 parent is mandatory. MaterialSwitch resolves its default style from
+        ?attr/materialSwitchStyle, which this Material 2 theme does not define; unstyled, it
+        inherits showText=true with no text set and crashes in SwitchCompat.makeLayout.
+      - Every part it draws must be tinted. Anything left to the theme resolves against M3
+        colour roles (colorSurfaceContainerHighest, colorOutline) that do not exist here, and
+        Android falls back to magenta. The unchecked track hit this; the checked track did not,
+        because M3 uses colorPrimary there and that role does exist.
+      - The tint selectors carry state_enabled entries, since a custom ColorStateList replaces
+        the widget's defaults rather than layering on them. Without those, a disabled switch
+        drew a solid thumb and read as more active than the enabled ones near it.
+
+      Light and dark are handled inside the colour selectors (color/ and color-night/), so this
+      style needs no night variant.
+    -->
+    <style name="HrlySwitch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="thumbIcon">@drawable/ic_check</item>
+        <item name="thumbTint">@color/switch_thumb_tint</item>
+        <item name="thumbIconTint">@color/switch_icon_tint</item>
+        <item name="trackTint">@color/switch_track_tint</item>
+        <item name="trackDecorationTint">@android:color/transparent</item>
+    </style>
+
     <!-- Pill corners for the Chime mode segmented control. A percentage size always
          resolves to a clean stadium (half the button height), so it matches the
          other pill buttons without the overshoot a fixed 50dp causes inside a
