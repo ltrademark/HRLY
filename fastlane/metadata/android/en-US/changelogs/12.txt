@@ -1,0 +1,2 @@
+- HRLY is now less than half its previous download size. Nothing about how it works has changed, and your settings carry over.
+- The blue accent in dark mode is richer, closer to how it already looked in the light theme.
