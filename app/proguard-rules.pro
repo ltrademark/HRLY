@@ -1,21 +1,21 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+# R8 rules for the release build (isMinifyEnabled + isShrinkResources).
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# This file is short on purpose. Nothing in the app is reflection-driven: no Class.forName, no
+# getIdentifier, no Serializable, no custom Parcelable, no enums. The only ::class.java uses are
+# Intent(context, X::class.java) and getSystemService(X::class.java), both of which R8 follows.
+#
+# The four manifest components (MainActivity, ChimeService, BootReceiver, ChimeReceiver) and the
+# custom view in dialog_crop.xml are kept by the rules AAPT2 generates from the merged manifest
+# and the layouts, so they are deliberately not repeated here. ChimeReceiver's name in particular
+# MUST survive: alarms scheduled by 1.72 and later name the class explicitly in their
+# PendingIntent, and those alarms outlive an app update.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Shrink and optimize HRLY's own code, but never rename it. App code is a rounding error in the
+# dex next to appcompat/material/kotlin, so this gives up almost nothing in size, and it keeps
+# every HRLY frame in a user's logcat readable. That matters most for F-Droid builds, which are
+# built from source on their machines with a mapping file we never see.
+-keepnames class com.ltrademark.hourly.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Line numbers in those traces, under the original file name rather than a renamed one.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
