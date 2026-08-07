@@ -11,7 +11,12 @@
 
     <color name="light_border">#eeeeee</color>
 
-    <color name="dark_brand_primary">#427bfa</color>
+    <!-- Same hue as the light blue (221°), but it cannot be the same colour: #1155EE on the
+         dark background is only 3.43:1, and this is text (colorPrimary is a textColor in
+         activity_main). It is also the checkmark drawn on the near-white thumb, so it cannot
+         go too light either. #2B6DFF is the most saturated blue on that hue clearing both:
+         4.57:1 as text, 4.18:1 as the checkmark. -->
+    <color name="dark_brand_primary">#2B6DFF</color>
     <color name="dark_brand_variant">#001192</color>
     <color name="dark_brand_secondary">#0129b1</color>
     <color name="dark_background_main">#060606</color>
