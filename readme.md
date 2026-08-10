@@ -40,15 +40,24 @@ These tones compound to announce the current hour. For example, 7:00 will be ann
 *   **Minimalist Design:** A clean, no-frills interface.
 *   **Open Source:** Licensed under the GNU GPLv3.
 
+[HRLY_Promo-Landscape.webm](https://github.com/user-attachments/assets/d1047034-23d3-4b3c-8400-340184238072)
+
+<!--
 ## Screenshots
 
 | <img alt="1" src="https://github.com/user-attachments/assets/fcd0a0a0-750a-4b5c-8fd9-a845e17e7500" /> | <img alt="2" src="https://github.com/user-attachments/assets/9e941aff-3085-4c0c-8ebd-b6f2ffe52df3" /> | <img alt="3" src="https://github.com/user-attachments/assets/42f1595c-731b-46be-8715-28a3195e396b" /> |
 | -- | -- | -- |
 | <img alt="4" src="https://github.com/user-attachments/assets/a8b14bca-910c-4dca-b691-89cbbaa38670" /> | <img alt="5" src="https://github.com/user-attachments/assets/e9383a17-70e0-4372-bd3b-bce5179f29d2" /> | <img alt="6" src="https://github.com/user-attachments/assets/cd3be9c5-e2f8-4105-a1ff-a13cfda4de69" /> |
+-->
 
 ---
 
 <div align="center">
   <p>2025-2026 &copy; Ltrademark&reg;.</p>
   <p>Code licensed under the GNU General Public License v3. See <a href="./LICENSE">LICENSE</a> for details.</p>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/420fb5c9-4063-46e2-8fe2-cf91f854781c">
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/5f308988-a069-4fe3-b427-7a44a99dfb09">
+    <img alt="LTM Logo" src="https://github.com/user-attachments/assets/5f308988-a069-4fe3-b427-7a44a99dfb09" style="width: 40px; aspect-ratio: 1;">
+  </picture>
 </div>
