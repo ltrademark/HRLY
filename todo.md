@@ -2,17 +2,13 @@
 
 ## Current
 - [ ] Add Widget Visual
-- [ ] Optional Vibration feature (for silent modes, or whatever) — GH #11 (play on vibrate, keep respecting DND)
-- [ ] clean up comments, dead variables, and other old testing code (if i haven't done that already).
 
 ## Feature Backlog (from GitHub issues)
-- [ ] #6 User-defined delay between chimes (also covers tcely's ask in #2)
-- [ ] #3 Option to use only one type of tone (short *or* long)
-- [ ] #4 Optional half-hour chime alongside the hourly chime
-- [ ] #7 Option to disable the "next chime at" notification
-- [ ] #8 Chime once with a single sound (feature part; the "default still plays" part is the #2 bug, now fixed)
+> _None, for now_
 
 ## Completed
+- [x] clean up comments, dead variables, and other old testing code (if i haven't done that already).
+- [x] Optional Vibration feature (for silent modes, or whatever) — GH #11 (play on vibrate, keep respecting DND)
 - [x] Set up base project structure
 - [x] Implement initial foreground service
 - [x] Design app icon and branding
@@ -27,6 +23,11 @@
 - [x] Cleanup and modernize "about" popup
 - [x] Change "about" pop-up trigger icon to (❔).
 - [x] Revisit Battery optimization permission flow
+- [x] #6 User-defined delay between chimes (also covers tcely's ask in #2)
+- [x] #3 Option to use only one type of tone (short *or* long)
+- [x] #4 Optional half-hour chime alongside the hourly chime
+- [x] #7 Option to disable the "next chime at" notification
+- [x] #8 Chime once with a single sound (feature part; the "default still plays" part is the #2 bug, now fixed)
 
 ---
 
