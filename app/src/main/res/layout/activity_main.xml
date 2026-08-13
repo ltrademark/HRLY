@@ -740,6 +740,58 @@
                             android:contentDescription="@string/minimize_notification" />
                     </LinearLayout>
 
+                    <!-- Do Not Disturb (#13). Only the app-side toggle lives here. A shortcut to
+                         Android's own per-app override was tried and dropped: it is placed
+                         differently per OEM (One UI keeps it under Do Not Disturb, not app info),
+                         so the link would have landed some users on a screen with no such control.
+                         The native grant is still honoured, it just isn't advertised. -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="16dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/ignore_dnd"
+                                android:textSize="18sp"
+                                android:textColor="?android:textColor"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/ignore_dnd_description"
+                                android:textSize="14sp"
+                                android:textColor="?android:textColorSecondary"/>
+
+                            <TextView
+                                android:id="@+id/txtDndSilenceNote"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/dnd_total_silence_note"
+                                android:textSize="12sp"
+                                android:textColor="#FF6E40"
+                                android:visibility="gone"/>
+                        </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switchIgnoreDnd"
+                            style="@style/HrlySwitch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/ignore_dnd" />
+                    </LinearLayout>
+
                 </LinearLayout>
 
             </LinearLayout>

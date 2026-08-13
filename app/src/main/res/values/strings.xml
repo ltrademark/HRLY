@@ -41,7 +41,12 @@
     <string name="mode_vibrate">Vibrate</string>
     <string name="mode_both">Both</string>
     <string name="override_silent">Play Sound in Silent/Vibrate Mode</string>
-    <string name="override_silent_description">Chime aloud even when the ringer is silent or on vibrate. Do Not Disturb is still respected.</string>
+    <string name="override_silent_description">Chime aloud even when the ringer is silent or on vibrate.</string>
+
+    <!-- Do Not Disturb (#13) -->
+    <string name="ignore_dnd">Ignore Do Not Disturb</string>
+    <string name="ignore_dnd_description">Chime even while Do Not Disturb is on. Allowing HRLY through in Android\'s own settings does the same.</string>
+    <string name="dnd_total_silence_note">Do Not Disturb is set to total silence, which mutes all sound. Chimes stay silent until that changes.</string>
 
     <!-- Minimize notification (#7) -->
     <string name="minimize_notification">Minimize Notification</string>

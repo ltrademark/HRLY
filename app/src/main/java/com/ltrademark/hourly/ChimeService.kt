@@ -21,12 +21,14 @@
 package com.ltrademark.hourly
 
 import android.app.*
+import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.IBinder
+import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -79,6 +81,26 @@ class ChimeService : Service() {
         // buzz is always long enough to feel and never runs uncomfortably long.
         const val MIN_VIBRATION_MS = 150L
         const val MAX_VIBRATION_MS = 1500L
+
+        /**
+         * True while Do Not Disturb is on.
+         *
+         * The three real filters are matched by name rather than testing for "not
+         * INTERRUPTION_FILTER_ALL", because that also caught INTERRUPTION_FILTER_UNKNOWN
+         * (returned when the filter can't be resolved) and silenced chimes with DND off.
+         *
+         * Shared with MainActivity so the settings screen and the chime itself can never
+         * disagree about whether DND is on.
+         */
+        fun isDndActive(context: Context): Boolean {
+            val nm = context.getSystemService(NotificationManager::class.java)
+            return when (nm.currentInterruptionFilter) {
+                NotificationManager.INTERRUPTION_FILTER_PRIORITY,
+                NotificationManager.INTERRUPTION_FILTER_NONE,
+                NotificationManager.INTERRUPTION_FILTER_ALARMS -> true
+                else -> false
+            }
+        }
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
@@ -126,7 +148,7 @@ class ChimeService : Service() {
 
                 val isSuspended = prefs.getBoolean("is_suspended", false)
 
-                if (testHour == -1 && (isDndActive() || isQuietTime() || isSuspended)) {
+                if (testHour == -1 && (shouldSuppressForDnd() || isQuietTime() || isSuspended)) {
                     if (!isSuspended) {
                         stopSelf()
                     }
@@ -212,9 +234,13 @@ class ChimeService : Service() {
 
             // #11: only when the user opts in do we use the alarm usage, which
             // plays through the phone's silent/vibrate ringer mode. Otherwise the
-            // notification usage keeps the old behavior (respects the ringer). DND
-            // and quiet hours are gated upstream in onStartCommand either way.
-            val usage = if (overrideSilent) {
+            // notification usage keeps the old behavior (respects the ringer).
+            //
+            // #13: the alarm usage is also what carries a tone past DND. Reaching here
+            // with DND on already means shouldSuppressForDnd() cleared it, so the tone is
+            // meant to be heard; on the notification usage zen mode would mute it and the
+            // chime would go missing anyway. Quiet hours still gate upstream.
+            val usage = if (overrideSilent || isDndActive(this)) {
                 AudioAttributes.USAGE_ALARM
             } else {
                 AudioAttributes.USAGE_NOTIFICATION
@@ -286,7 +312,28 @@ class ChimeService : Service() {
             getSystemService(VIBRATOR_SERVICE) as Vibrator
         }
         val clamped = durationMs.coerceIn(MIN_VIBRATION_MS, MAX_VIBRATION_MS)
-        vibrator.vibrate(VibrationEffect.createOneShot(clamped, VibrationEffect.DEFAULT_AMPLITUDE))
+        val effect = VibrationEffect.createOneShot(clamped, VibrationEffect.DEFAULT_AMPLITUDE)
+
+        // A bare vibrate() carries no usage, leaving zen-mode filtering to the system's
+        // discretion. When chiming through DND on purpose (#13), say so explicitly, or the
+        // buzz can be swallowed even though the tone plays.
+        if (isDndActive(this)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                vibrator.vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_ALARM))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator.vibrate(
+                    effect,
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+            }
+            return
+        }
+
+        vibrator.vibrate(effect)
     }
 
     override fun onCreate() {
@@ -428,11 +475,36 @@ class ChimeService : Service() {
         notificationManager.notify(1, builder.build())
     }
 
-    private fun isDndActive(): Boolean {
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        val currentFilter = notificationManager.currentInterruptionFilter
+    /**
+     * True when the user has allowed HRLY past Do Not Disturb in Android's own settings
+     * ("Override Do Not Disturb" on the notification channel).
+     *
+     * Reading a channel the user has customized needs no permission. Both channels are
+     * checked rather than just the active one, so the grant survives flipping "Minimize
+     * notification" (which swaps which channel posts). Channels are guaranteed to exist
+     * by the time this runs: onStartCommand calls startForeground() first, and building
+     * that notification calls ensureChannels().
+     */
+    private fun hasNativeDndBypass(): Boolean {
+        val nm = getSystemService(NotificationManager::class.java)
+        return listOf(CHANNEL_VISIBLE, CHANNEL_MINIMIZED).any {
+            nm.getNotificationChannel(it)?.canBypassDnd() == true
+        }
+    }
 
-        return currentFilter != NotificationManager.INTERRUPTION_FILTER_ALL
+    /**
+     * Whether to skip the hourly chime because of Do Not Disturb (#13).
+     *
+     * Device-first: DND alone is no longer a blanket block. If the user granted HRLY the
+     * native DND override, that grant is honoured. "Ignore Do Not Disturb" is the opt-in for
+     * anyone the native route doesn't reach, and switching it on ignores DND outright.
+     * Quiet hours and pausing are HRLY's own schedules and gate separately, untouched.
+     */
+    private fun shouldSuppressForDnd(): Boolean {
+        if (!isDndActive(this)) return false
+        val prefs = getSharedPreferences("hourly_prefs", MODE_PRIVATE)
+        if (prefs.getBoolean("ignore_dnd", false)) return false
+        return !hasNativeDndBypass()
     }
 
     private fun isQuietTime(): Boolean {

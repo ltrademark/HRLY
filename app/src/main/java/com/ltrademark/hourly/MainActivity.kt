@@ -22,6 +22,7 @@ package com.ltrademark.hourly
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.NotificationManager
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -139,6 +140,7 @@ class MainActivity : AppCompatActivity() {
         setupSimpleMode()
         setupChimeMode()
         setupNotificationPref()
+        setupDndPref()
         setupTiming()
     }
 
@@ -594,6 +596,38 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Do Not Disturb (#13).
+     *
+     * Defaults to off, so DND is respected until the user says otherwise. Android's own per-app
+     * override is honoured too (see ChimeService.hasNativeDndBypass) but is deliberately not
+     * surfaced here: OEMs put that control in different places, so a shortcut to it would land
+     * some users on a screen that has no such setting.
+     */
+    private fun setupDndPref() {
+        val sw = findViewById<SwitchCompat>(R.id.switchIgnoreDnd)
+        sw.isChecked = prefs.getBoolean("ignore_dnd", false)
+        sw.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit { putBoolean("ignore_dnd", isChecked) }
+        }
+
+        refreshDndNotes()
+    }
+
+    /**
+     * Shows the total-silence caveat only while it applies: that mode mutes the alarm stream
+     * the chime rides on, so nothing set here can be heard until it changes.
+     */
+    private fun refreshDndNotes() {
+        val nm = getSystemService(NotificationManager::class.java)
+        findViewById<TextView>(R.id.txtDndSilenceNote).visibility =
+            if (nm.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_NONE) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+    }
+
     private fun setupTiming() {
         val sw = findViewById<SwitchCompat>(R.id.switchTiming)
         val container = findViewById<LinearLayout>(R.id.containerTiming)
@@ -786,10 +820,13 @@ class MainActivity : AppCompatActivity() {
                     setDataSource(file.absolutePath)
                     // Play on the same stream the chime actually uses so the preview
                     // matches reality: the alarm usage when the user opted to play
-                    // through silent/vibrate (#11), otherwise the notification usage.
-                    // Either way not the media stream, which would be silent for
-                    // anyone with media volume down even though the chime is audible.
-                    val usage = if (prefs.getBoolean("override_silent", false)) {
+                    // through silent/vibrate (#11) or while DND is on (#13), otherwise
+                    // the notification usage. Either way not the media stream, which
+                    // would be silent for anyone with media volume down even though the
+                    // chime is audible.
+                    val usage = if (prefs.getBoolean("override_silent", false) ||
+                        ChimeService.isDndActive(this@MainActivity)
+                    ) {
                         AudioAttributes.USAGE_ALARM
                     } else {
                         AudioAttributes.USAGE_NOTIFICATION
@@ -956,6 +993,9 @@ class MainActivity : AppCompatActivity() {
         // Refreshed here too: pausing happens in the shade, often while this screen is
         // still open behind it.
         setupPausedBanner()
+        // Same reasoning for DND: it is usually toggled from the shade, and the user may
+        // be coming back from the notification settings this screen links out to.
+        refreshDndNotes()
 
         if (switchService.isChecked != isServiceEnabled) {
             switchService.isChecked = isServiceEnabled
