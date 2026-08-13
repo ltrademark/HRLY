@@ -4,7 +4,7 @@
 - [ ] Add Widget Visual
 
 ## Feature Backlog (from GitHub issues)
-- [ ] #13 (2nd part) An untrimmed custom tone is cut off at the *default* tone's length (500 / 1500 ms) instead of playing in full. `playFor` falls back to the hardcoded duration in `ChimeService.playTone`; read the file's real duration instead (`WaveformDecoder` already gets it for the trim dialog). Trimming and saving is the current workaround.
+> _None, for now_
 
 ## Completed
 - [x] clean up comments, dead variables, and other old testing code (if i haven't done that already).
@@ -28,6 +28,7 @@
 - [x] #4 Optional half-hour chime alongside the hourly chime
 - [x] #7 Option to disable the "next chime at" notification
 - [x] #8 Chime once with a single sound (feature part; the "default still plays" part is the #2 bug, now fixed)
+- [x] #13 (2nd part) Play an untrimmed custom tone for its own full length instead of cutting it off at the default tone's 500 / 1500 ms
 - [x] #13 Chime during Do Not Disturb, via an "Ignore Do Not Disturb" toggle. Android's own per-app override is honoured too, so anyone who already allowed HRLY through Do Not Disturb needs no in-app setting at all.
 
 ---

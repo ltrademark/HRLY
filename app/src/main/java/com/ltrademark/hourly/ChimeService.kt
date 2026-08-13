@@ -253,13 +253,21 @@ class ChimeService : Service() {
 
             mediaPlayer.prepare()
 
-            val playFor = if (hasCrop) {
-                // Sample-accurate seek so the crop start lands where the user set it
-                // (the default seek snaps to the nearest keyframe).
-                mediaPlayer.seekTo(cropStart.toLong(), MediaPlayer.SEEK_CLOSEST)
-                (cropEnd - cropStart).toLong()
-            } else {
-                duration
+            val playFor = when {
+                hasCrop -> {
+                    // Sample-accurate seek so the crop start lands where the user set it
+                    // (the default seek snaps to the nearest keyframe).
+                    mediaPlayer.seekTo(cropStart.toLong(), MediaPlayer.SEEK_CLOSEST)
+                    (cropEnd - cropStart).toLong()
+                }
+                // An untrimmed custom tone used to inherit the DEFAULT tone's length and got
+                // cut off at 500 / 1500 ms, taking the matched vibration down with it. Play
+                // the file the user actually picked, for as long as it actually is. Trimming
+                // stays the way to shorten it, and going through the trim dialog and saving
+                // was the workaround for this. getDuration() is only valid after prepare()
+                // and reports -1 when it cannot be determined, hence the guard.
+                customFile != null -> mediaPlayer.duration.takeIf { it > 0 }?.toLong() ?: duration
+                else -> duration
             }
 
             // Vibrate alongside the sound when the mode asks for it, matched to the
