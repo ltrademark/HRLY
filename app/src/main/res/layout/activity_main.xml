@@ -774,6 +774,14 @@
                                 android:textColor="?android:textColorSecondary"/>
 
                             <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/ignore_dnd_note"
+                                android:textSize="12sp"
+                                android:textColor="?android:textColorSecondary"/>
+
+                            <TextView
                                 android:id="@+id/txtDndSilenceNote"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
