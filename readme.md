@@ -30,9 +30,10 @@ These tones compound to announce the current hour. For example, 7:00 will be ann
 
 *   **Simple Time System:** Long and short tones compound to count out the hour.
 *   **Chime Modes:** Pick Sound, Vibrate, or Both, with vibration length matched to each tone.
-*   **Play in Silent or Vibrate:** Optionally keep the chime audible even when the ringer is silenced or on vibrate (Do Not Disturb is still respected).
+*   **Play in Silent or Vibrate:** Optionally keep the chime audible even when the ringer is silenced or on vibrate.
+*   **Do Not Disturb:** Chimes stay quiet during Do Not Disturb, unless you have allowed HRLY through it in Android's own settings, or switch on "Ignore Do Not Disturb".
 *   **Single Chime:** Play one tone each hour instead of counting the hour.
-*   **Custom Sounds:** Use your own audio files for the short and long tones, and trim them to length.
+*   **Custom Sounds:** Use your own audio files for the short and long tones. They play at their full length, and can be trimmed shorter.
 *   **Custom Timing:** Adjust the gap between tones.
 *   **Quiet Hours:** Pause chimes during a time range you set.
 *   **Notification Controls:** Skip the next chime, pause, or stop the service from the notification, or minimize it.
