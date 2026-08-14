@@ -1,0 +1,3 @@
+- Chimes can now be heard during Do Not Disturb. If you have already allowed HRLY through it in Android's settings, it will be heard from now on. If your device does not offer that, the new "Ignore Do Not Disturb" toggle does the same.
+- Custom sounds now play for their full length. Longer ones were cut off after half a second, which shortened the vibration too. Trimming still shortens a sound on purpose.
+- Quiet Hours and pausing still silence chimes either way.
